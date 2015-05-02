@@ -1,0 +1,468 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     16892,        459]
+NotebookOptionsPosition[     15761,        419]
+NotebookOutlinePosition[     16102,        434]
+CellTagsIndexPosition[     16059,        431]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"phiMean", "[", 
+   RowBox[{
+   "x_", ",", "N_", ",", "alpha_", ",", "m_", ",", "mu_", ",", "nu_", ",", 
+    "delta_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"A", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"m", "*", "x"}], "+", "mu"}], ")"}]}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"B", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"m", "*", 
+           RowBox[{"(", 
+            RowBox[{"1", "-", "x"}], ")"}]}], "+", "nu"}], ")"}]}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"D", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", "delta"}]}]}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{"A", "*", " ", 
+     RowBox[{
+      RowBox[{"Hypergeometric1F1", "[", 
+       RowBox[{
+        RowBox[{"1", "+", "A"}], ",", 
+        RowBox[{"1", "+", "A", "+", "B"}], ",", 
+        RowBox[{"-", "D"}]}], "]"}], "/", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"A", "+", "B"}], ")"}], "*", 
+        RowBox[{"Hypergeometric1F1", "[", 
+         RowBox[{"A", ",", 
+          RowBox[{"A", "+", "B"}], ",", 
+          RowBox[{"-", "D"}]}], "]"}]}], ")"}]}]}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.6362928038844967`*^9, 3.636292831869623*^9}, {
+  3.636293619945863*^9, 3.636293629096181*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"phiM2", "[", 
+   RowBox[{
+   "x_", ",", "N_", ",", "alpha_", ",", "m_", ",", "mu_", ",", "nu_", ",", 
+    "delta_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"A", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"m", "*", "x"}], "+", "mu"}], ")"}]}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"B", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"m", "*", 
+           RowBox[{"(", 
+            RowBox[{"1", "-", "x"}], ")"}]}], "+", "nu"}], ")"}]}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"D", "=", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"N", "/", "alpha"}], ")"}], "*", "delta"}]}]}], " ", "}"}], 
+    ",", "\[IndentingNewLine]", 
+    RowBox[{"A", "*", 
+     RowBox[{"(", 
+      RowBox[{"A", "+", "1"}], ")"}], "*", " ", 
+     RowBox[{
+      RowBox[{"Hypergeometric1F1", "[", 
+       RowBox[{
+        RowBox[{"2", "+", "A"}], ",", 
+        RowBox[{"2", "+", "A", "+", "B"}], ",", 
+        RowBox[{"-", "D"}]}], "]"}], "/", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{"A", "+", "B"}], ")"}], "*", 
+        RowBox[{"(", 
+         RowBox[{"A", "+", "B", "+", "1"}], ")"}], "*", 
+        RowBox[{"Hypergeometric1F1", "[", 
+         RowBox[{"A", ",", 
+          RowBox[{"A", "+", "B"}], ",", 
+          RowBox[{"-", "D"}]}], "]"}]}], ")"}]}]}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.636293634802988*^9, 3.636293635592763*^9}, {
+  3.636293675528242*^9, 3.636293784606758*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"phiMean", "::", "usage"}], "=", 
+   "\"\<Mean of the equilibrium distribution phi_x.\nN -- haploid population \
+size of a deme\nalpha -- drift parameter\nm -- migration rate\nmu -- \
+(forwards) mutation rate towards the mutant allele\nnu -- (backwards) \
+mutation rate towards the wild-type allele\ndelta -- fitness cost of the \
+mutation; log fitness is -delta\n\>\""}], ";"}]], "Input",
+ CellChangeTimes->{{3.636293020727161*^9, 3.6362930584937696`*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"msbFreq", "[", 
+   RowBox[{
+   "N_", ",", "alpha_", ",", "m_", ",", "mu_", ",", "nu_", ",", "delta_"}], 
+   "]"}], ":=", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"xhat", "=", 
+      RowBox[{"x", "/.", 
+       RowBox[{"First", "[", 
+        RowBox[{"FindRoot", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"phiMean", "[", 
+            RowBox[{
+            "x", ",", "N", ",", "alpha", ",", "m", ",", "mu", ",", "nu", ",", 
+             "delta"}], "]"}], "-", "x"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"x", ",", 
+            RowBox[{"mu", "/", "delta"}]}], "}"}]}], "]"}], "]"}]}]}], "}"}], 
+    ",", "\[IndentingNewLine]", "xhat"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"msbFreq", "::", "usage"}], "=", 
+   "\"\<Mutation-selection balance frequency in the infinite island model.\nN \
+-- haploid population size of a deme\nalpha -- drift parameter\nm -- \
+migration rate\nmu -- (forwards) mutation rate towards the mutant allele\nnu \
+-- (backwards) mutation rate towards the wild-type allele\ndelta -- fitness \
+cost of the mutation; log fitness is -delta\n\nMust have delta>0. Can \
+approximate neutral by making delta very small.\n\>\""}], ";"}]}], "Input",
+ CellChangeTimes->{{3.636293184864026*^9, 3.636293231686582*^9}, {
+   3.6362933719917507`*^9, 3.636293377378058*^9}, {3.636293414505959*^9, 
+   3.6362934550520773`*^9}, 3.636293977273631*^9, {3.636294196584126*^9, 
+   3.6362942023816147`*^9}, {3.636294399095187*^9, 3.636294410543027*^9}, {
+   3.636294444291543*^9, 3.636294445489493*^9}, {3.6362945049162073`*^9, 
+   3.636294531867936*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Function", " ", "that", " ", "returns", " ", "the", " ", "value", " ", 
+    "of", " ", "Fst", " ", "at", " ", "equilibrium", " ", "in", " ", "the", 
+    " ", "infinite", " ", "island", " ", 
+    RowBox[{"model", "."}]}], "*)"}], 
+  RowBox[{
+   RowBox[{
+    RowBox[{"msbFst", "[", 
+     RowBox[{
+     "N_", ",", "alpha_", ",", "m_", ",", "mu_", ",", "nu_", ",", "delta_"}], 
+     "]"}], ":=", 
+    RowBox[{"Module", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"xhat", ",", "M2", ",", "Fst"}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"xhat", " ", "=", " ", 
+        RowBox[{"msbFreq", "[", 
+         RowBox[{
+         "N", ",", "alpha", ",", "m", ",", "mu", ",", "nu", ",", "delta"}], 
+         "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"M2", "=", 
+        RowBox[{"phiM2", "[", 
+         RowBox[{
+         "xhat", ",", "N", ",", "alpha", ",", "m", ",", "mu", ",", "nu", ",", 
+          "delta"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"Fst", "=", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"M2", "-", 
+           RowBox[{"xhat", "^", "2"}]}], ")"}], "/", 
+         RowBox[{"(", 
+          RowBox[{"xhat", "*", 
+           RowBox[{"(", 
+            RowBox[{"1", "-", "xhat"}], ")"}]}], ")"}]}]}], ";", 
+       "\[IndentingNewLine]", "Fst"}]}], "]"}]}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.636293544087907*^9, 3.636293611064089*^9}, {
+   3.636293795947957*^9, 3.636293851026766*^9}, {3.636293960312663*^9, 
+   3.636293964634282*^9}, {3.6362940561499443`*^9, 3.636294071429758*^9}, {
+   3.636294120172764*^9, 3.636294171059744*^9}, 3.6362946109071217`*^9}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"msbFreq", "[", 
+  RowBox[{
+  "100", ",", "0.5", ",", "0.001", ",", "0.01", ",", "0.01", ",", 
+   "0.000001"}], "]"}]], "Input",
+ CellChangeTimes->{{3.6362932369818583`*^9, 3.63629327995193*^9}, {
+   3.6362944196035433`*^9, 3.636294497610029*^9}, 3.636294539745389*^9}],
+
+Cell[BoxData["0.49998990384615677`"], "Output",
+ CellChangeTimes->{
+  3.636293280449692*^9, 3.6362933795238333`*^9, 3.6362934569033833`*^9, 
+   3.6362939843798237`*^9, {3.636294422102407*^9, 3.636294498043095*^9}, 
+   3.6362945402266397`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"msbFst", "[", 
+  RowBox[{
+  "100", ",", "0.5", ",", "0.001", ",", "1*^-7", ",", "1*^-7", ",", 
+   "0.0000000001"}], "]"}]], "Input",
+ CellChangeTimes->{{3.636294095219431*^9, 3.636294095859159*^9}, {
+  3.636294555095821*^9, 3.63629456245506*^9}}],
+
+Cell[BoxData["0.833305556481398`"], "Output",
+ CellChangeTimes->{3.636294096273843*^9, 3.636294176534931*^9, 
+  3.6362942104321938`*^9, 3.636294562942012*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"msbFst", "[", 
+    RowBox[{"100", ",", 
+     RowBox[{"1", "/", "2"}], ",", 
+     RowBox[{"10", "^", "x"}], ",", "1*^-7", ",", "0", ",", "0.04"}], "]"}], 
+   ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.636294757509658*^9, 3.636294820353754*^9}, {
+  3.636294866608157*^9, 3.636294866711587*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Table", "[", 
+  RowBox[{
+   RowBox[{"10", "^", "x"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.636295048733712*^9, 3.636295052610587*^9}, {
+  3.6383843345340767`*^9, 3.638384335465343*^9}}],
+
+Cell[BoxData[
+ StyleBox[
+  RowBox[{
+  "Generate", " ", "equilibrium", " ", "Fst", " ", "for", " ", "a", " ", 
+   "grid", " ", "of", " ", "delta", " ", "and", " ", "m", " ", "and", " ", 
+   "save", " ", "to", " ", "csv"}], "Section"]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"SetDirectory", "[", 
+  "\"\</home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/\
+src/figures/equilibrium_fst/\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.638384144777795*^9, 3.6383843422156754`*^9}}],
+
+Cell[BoxData["\<\"/home/michael/Dropbox/research/valley_crossing/\
+metapopulations/asexual/src/figures/equilibrium_fst\"\>"], "Output",
+ CellChangeTimes->{
+  3.638384241210496*^9, {3.638384320788175*^9, 3.638384343359144*^9}, 
+   3.63856941130235*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"t", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"msbFst", "[", 
+      RowBox[{"100", ",", 
+       RowBox[{"1", "/", "2"}], ",", 
+       RowBox[{"10", "^", "x"}], ",", "1*^-11", ",", "1*^-11", ",", "delta"}],
+       "]"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"delta", ",", 
+       RowBox[{"List", "[", 
+        RowBox[{
+        "1*^-6", ",", "1*^-3", ",", "5*^-3", ",", "1*^-2", ",", "2*^-2", ",", 
+         "3*^-2", ",", "4*^-2", ",", "5*^-2", ",", "1*^-1"}], "]"}]}], "}"}], 
+     ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", 
+       RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"t1", "=", 
+   RowBox[{"Transpose", "[", 
+    RowBox[{"Join", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"10", "^", "x"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"x", ",", 
+           RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}], "}"}],
+       ",", "t"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Export", "[", 
+  RowBox[{"\"\<feq_data.csv\>\"", ",", "t1"}], "]"}]}], "Input",
+ CellChangeTimes->{{3.627139265930996*^9, 3.6271393067716923`*^9}, {
+  3.627139385672018*^9, 3.627139416958652*^9}, {3.6271396164555902`*^9, 
+  3.627139688581002*^9}, {3.627140063475424*^9, 3.627140264420587*^9}, {
+  3.627140318176458*^9, 3.627140451828128*^9}, {3.62714055473853*^9, 
+  3.627140554825829*^9}, {3.627140633388283*^9, 3.6271406346807117`*^9}, {
+  3.627140888438513*^9, 3.62714090343624*^9}, {3.627141051713573*^9, 
+  3.6271410570358963`*^9}, {3.6271413132462797`*^9, 3.6271413182286243`*^9}, {
+  3.627142566918586*^9, 3.627142607724988*^9}, {3.627666964624474*^9, 
+  3.627667023542625*^9}, {3.6383843820154543`*^9, 3.638384457868291*^9}, {
+  3.638384503932725*^9, 3.6383845295139017`*^9}, {3.6383845651217003`*^9, 
+  3.638384579012396*^9}, {3.638384725890172*^9, 3.6383847343923073`*^9}, {
+  3.638385101211434*^9, 3.638385147177846*^9}, {3.6385693879508142`*^9, 
+  3.638569396595269*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"FindRoot", "::", "lstol"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"The line search decreased the step size to within \
+tolerance specified by AccuracyGoal and PrecisionGoal but was unable to find \
+a sufficient decrease in the merit function. You may need more than \
+\[NoBreak]\\!\\(MachinePrecision\\)\[NoBreak] digits of working precision to \
+meet these tolerances. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
+\\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
+  3.6383851534944696`*^9, 3.638569411670496*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"FindRoot", "::", "lstol"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"The line search decreased the step size to within \
+tolerance specified by AccuracyGoal and PrecisionGoal but was unable to find \
+a sufficient decrease in the merit function. You may need more than \
+\[NoBreak]\\!\\(MachinePrecision\\)\[NoBreak] digits of working precision to \
+meet these tolerances. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
+\\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
+  3.6383851534944696`*^9, 3.638569411797029*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"FindRoot", "::", "lstol"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"The line search decreased the step size to within \
+tolerance specified by AccuracyGoal and PrecisionGoal but was unable to find \
+a sufficient decrease in the merit function. You may need more than \
+\[NoBreak]\\!\\(MachinePrecision\\)\[NoBreak] digits of working precision to \
+meet these tolerances. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
+\\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
+  3.6383851534944696`*^9, 3.6385694118079567`*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"General", "::", "stop"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"Further output of \[NoBreak]\\!\\(\\*StyleBox[\\(FindRoot \
+:: lstol\\), \\\"MessageName\\\"]\\)\[NoBreak] will be suppressed during this \
+calculation. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/General/stop\\\", ButtonNote -> \
+\\\"General::stop\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
+  3.6383851534944696`*^9, 3.638569411829856*^9}],
+
+Cell[BoxData["\<\"feq_data.csv\"\>"], "Output",
+ CellChangeTimes->{3.6383845852458878`*^9, 3.638384738983115*^9, 
+  3.638385162675411*^9, 3.638569422973364*^9}]
+}, Open  ]]
+},
+WindowSize->{1918, 1078},
+WindowMargins->{{Automatic, -1918}, {Automatic, 0}},
+FrontEndVersion->"8.0 for Linux x86 (64-bit) (February 23, 2011)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 1630, 49, 107, "Input"],
+Cell[2190, 71, 1773, 53, 107, "Input"],
+Cell[3966, 126, 503, 9, 164, "Input"],
+Cell[4472, 137, 1697, 37, 259, "Input"],
+Cell[6172, 176, 1745, 44, 145, "Input"],
+Cell[CellGroupData[{
+Cell[7942, 224, 292, 6, 30, "Input"],
+Cell[8237, 232, 242, 4, 30, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[8516, 241, 270, 6, 30, "Input"],
+Cell[8789, 249, 158, 2, 30, "Output"]
+}, Open  ]],
+Cell[8962, 254, 477, 12, 50, "Input"],
+Cell[9442, 268, 339, 8, 50, "Input"],
+Cell[9784, 278, 243, 5, 39, "Input"],
+Cell[CellGroupData[{
+Cell[10052, 287, 244, 4, 30, "Input"],
+Cell[10299, 293, 251, 4, 30, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[10587, 302, 2101, 48, 107, "Input"],
+Cell[12691, 352, 759, 14, 40, "Message"],
+Cell[13453, 368, 759, 14, 40, "Message"],
+Cell[14215, 384, 761, 14, 40, "Message"],
+Cell[14979, 400, 603, 12, 23, "Message"],
+Cell[15585, 414, 160, 2, 30, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
