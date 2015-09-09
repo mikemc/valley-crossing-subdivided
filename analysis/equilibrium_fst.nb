@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       157,          7]
-NotebookDataLength[     16892,        459]
-NotebookOptionsPosition[     15761,        419]
-NotebookOutlinePosition[     16102,        434]
-CellTagsIndexPosition[     16059,        431]
+NotebookDataLength[     19966,        546]
+NotebookOptionsPosition[     18569,        497]
+NotebookOutlinePosition[     18910,        512]
+CellTagsIndexPosition[     18867,        509]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -295,7 +295,7 @@ Cell[BoxData["\<\"/home/michael/Dropbox/research/valley_crossing/\
 metapopulations/asexual/src/figures/equilibrium_fst\"\>"], "Output",
  CellChangeTimes->{
   3.638384241210496*^9, {3.638384320788175*^9, 3.638384343359144*^9}, 
-   3.63856941130235*^9}]
+   3.63856941130235*^9, 3.642184883612268*^9}]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -364,7 +364,7 @@ ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
 ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
 \\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
  CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
-  3.6383851534944696`*^9, 3.638569411670496*^9}],
+  3.6383851534944696`*^9, 3.638569411670496*^9, 3.642184884913512*^9}],
 
 Cell[BoxData[
  RowBox[{
@@ -380,7 +380,7 @@ ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
 ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
 \\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
  CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
-  3.6383851534944696`*^9, 3.638569411797029*^9}],
+  3.6383851534944696`*^9, 3.638569411670496*^9, 3.642184885041893*^9}],
 
 Cell[BoxData[
  RowBox[{
@@ -396,7 +396,7 @@ ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
 ButtonData:>\\\"paclet:ref/message/FindRoot/lstol\\\", ButtonNote -> \
 \\\"FindRoot::lstol\\\"]\\)\"\>"}]], "Message", "MSG",
  CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
-  3.6383851534944696`*^9, 3.6385694118079567`*^9}],
+  3.6383851534944696`*^9, 3.638569411670496*^9, 3.642184885055526*^9}],
 
 Cell[BoxData[
  RowBox[{
@@ -410,11 +410,89 @@ ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
 ButtonData:>\\\"paclet:ref/message/General/stop\\\", ButtonNote -> \
 \\\"General::stop\\\"]\\)\"\>"}]], "Message", "MSG",
  CellChangeTimes->{3.638384581628128*^9, 3.638384735055282*^9, 
-  3.6383851534944696`*^9, 3.638569411829856*^9}],
+  3.6383851534944696`*^9, 3.638569411670496*^9, 3.6421848850704327`*^9}],
 
 Cell[BoxData["\<\"feq_data.csv\"\>"], "Output",
  CellChangeTimes->{3.6383845852458878`*^9, 3.638384738983115*^9, 
-  3.638385162675411*^9, 3.638569422973364*^9}]
+  3.638385162675411*^9, 3.638569422973364*^9, 3.642184896103622*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ StyleBox[
+  RowBox[{
+   RowBox[{"Generate", " ", "equilibrium", " ", "Fst", " ", "for", " ", "N"}],
+    "=", 
+   RowBox[{
+    RowBox[{"500", " ", "and", " ", "delta"}], "=", 
+    RowBox[{
+     RowBox[{"1", "e"}], "-", "3"}]}]}], "Section"]], "Input",
+ CellChangeTimes->{{3.642184695630332*^9, 3.64218472819009*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"SetDirectory", "[", 
+  "\"\</home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/\
+src/figures/equilibrium_fst/\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.638384144777795*^9, 3.6383843422156754`*^9}}],
+
+Cell[BoxData["\<\"/home/michael/Dropbox/research/valley_crossing/\
+metapopulations/asexual/src/figures/equilibrium_fst\"\>"], "Output",
+ CellChangeTimes->{
+  3.638384241210496*^9, {3.638384320788175*^9, 3.638384343359144*^9}, 
+   3.63856941130235*^9, 3.642184815023033*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"t", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"msbFst", "[", 
+      RowBox[{"500", ",", 
+       RowBox[{"1", "/", "2"}], ",", 
+       RowBox[{"10", "^", "x"}], ",", "1*^-11", ",", "1*^-11", ",", "delta"}],
+       "]"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"delta", ",", 
+       RowBox[{"List", "[", "1*^-3", "]"}]}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", 
+       RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"t1", "=", 
+   RowBox[{"Transpose", "[", 
+    RowBox[{"Join", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"10", "^", "x"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"x", ",", 
+           RowBox[{"-", "9"}], ",", "0", ",", "0.01"}], "}"}]}], "]"}], "}"}],
+       ",", "t"}], "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{"Export", "[", 
+  RowBox[{"\"\<feq_N500_d1e-3_data.csv\>\"", ",", "t1"}], "]"}]}], "Input",
+ CellChangeTimes->CompressedData["
+1:eJxTTMoPSmViYGAQBWIQveOUrYQF22vHLRsjZEG0TqOpOoh2XyunDaKNpvC5
+gOhJ04V8QfQas/fVILq4lHcqiO5eenQ2iGZrqFoDorkWhe8E0Ya5UWD6Qo7O
+YRCdciIUTPtw8D0G0eu+vn0CoqdfLfsOogXUFH+A6LaH6hKWQPpJwHEwzZd6
+dwuIljL+vhNEb/w9+ZAl+2tH/diPJ0H0rLoD91dJA+09af0SRD+68fcdmC40
++ASifzxZ/A1E96Qm/ADRXjV7uFYD6RO9Z7hBtOCRZZYg+tWGVHsQLZRbZ8oq
+89qxiGeyGYj+FdjX8krptWMho0wniD6mt60fTPu5TADRRXYPt4Lo4tOt20A0
+ADTgnHc=
+  "]],
+
+Cell[BoxData["\<\"feq_N500_d1e-3_data.csv\"\>"], "Output",
+ CellChangeTimes->{
+  3.6383845852458878`*^9, 3.638384738983115*^9, 3.638385162675411*^9, 
+   3.638569422973364*^9, {3.642184816304097*^9, 3.642184835108891*^9}, {
+   3.64218511816286*^9, 3.642185141641177*^9}}]
 }, Open  ]]
 },
 WindowSize->{1918, 1078},
@@ -451,15 +529,24 @@ Cell[9442, 268, 339, 8, 50, "Input"],
 Cell[9784, 278, 243, 5, 39, "Input"],
 Cell[CellGroupData[{
 Cell[10052, 287, 244, 4, 30, "Input"],
-Cell[10299, 293, 251, 4, 30, "Output"]
+Cell[10299, 293, 273, 4, 30, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[10587, 302, 2101, 48, 107, "Input"],
-Cell[12691, 352, 759, 14, 40, "Message"],
-Cell[13453, 368, 759, 14, 40, "Message"],
-Cell[14215, 384, 761, 14, 40, "Message"],
-Cell[14979, 400, 603, 12, 23, "Message"],
-Cell[15585, 414, 160, 2, 30, "Output"]
+Cell[10609, 302, 2101, 48, 107, "Input"],
+Cell[12713, 352, 781, 14, 40, "Message"],
+Cell[13497, 368, 781, 14, 40, "Message"],
+Cell[14281, 384, 781, 14, 40, "Message"],
+Cell[15065, 400, 627, 12, 23, "Message"],
+Cell[15695, 414, 182, 2, 30, "Output"]
+}, Open  ]],
+Cell[15892, 419, 330, 9, 39, "Input"],
+Cell[CellGroupData[{
+Cell[16247, 432, 244, 4, 30, "Input"],
+Cell[16494, 438, 273, 4, 30, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16804, 447, 1476, 41, 107, "Input"],
+Cell[18283, 490, 270, 4, 30, "Output"]
 }, Open  ]]
 }
 ]
