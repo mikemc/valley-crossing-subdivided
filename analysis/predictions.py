@@ -190,10 +190,10 @@ def p1_sub_deme_bd(N, alpha, mu1, delta, s, m):
     # Probability that a 2-mutant deme spreads through the entire population
     theta = 1 - exp(-2 * Ne * s)
     # Probability of success starting from one 1-mutant deme
-    p = ( -(d1 - b1 + r1) + sqrt((d1 - b1 + r1)**2 + 4 * b1 * r1 * theta) ) \
+    rho = ( -(d1 - b1 + r1) + sqrt((d1 - b1 + r1)**2 + 4 * b1 * r1 * theta) ) \
             / (2 * b1)
     # Probability of success starting from one 1-mutant
-    p1 = fixation_probability(Ne, -delta, 1/N) * p
+    p1 = fixation_probability(Ne, -delta, 1/N) * rho
     return p1
 
 def drift_time_sub_deme_bd(N, alpha, mu1, delta, s, m):
@@ -430,4 +430,3 @@ def feq_locally_deleterious(N, alpha, delta, m, approx=0, lintype=0):
     # Fst found by averaging over both types of lineages
     F = (F1 * W1 + F2 * W2) / (W1 + W2)
     return F
-
