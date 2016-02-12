@@ -108,26 +108,22 @@ def drift_time_cdf_wm(alpha, mu1, delta, s, p2=None, pdf=False):
 
     Parameters: see help for the 'p1_genic' function.
 
-    The expected drift time $E[T_1]$ is calculated from Equation ?.
     """
+    # Probability that a 2-mutant establishes
     if p2 == None:
         p2 = s / alpha
     # individual birth rate
     b1 = alpha - delta
     # individual death rate
     d1 = alpha
-    # Mutation rate from 1 to 2
-    r1 = mu1
-    # Probability that a 2-mutant establishes
-    theta = p2
-    a_p = (d1 + b1 + r1 + sqrt((d1 - b1 + r1)**2 + 4 * b1 * r1 * theta)) \
+    a_p = (d1 + b1 + mu1 + sqrt((d1 - b1 + mu1)**2 + 4 * b1 * mu1 * p2)) \
             / (2 * b1)
-    a_m = (d1 + b1 + r1 - sqrt((d1 - b1 + r1)**2 + 4 * b1 * r1 * theta)) \
+    a_m = (d1 + b1 + mu1 - sqrt((d1 - b1 + mu1)**2 + 4 * b1 * mu1 * p2)) \
             / (2 * b1)
     # Probability successful
     p1 = 1 - a_m
     p1_cdf = lambda t: (a_p - 1) * (1 - a_m) * (1 - exp(-b1 * (a_p - a_m)*t))\
-            / (a_p - 1 + (1 - a_m) * (1 - exp(-b1 * (a_p - a_m) * t)))
+            / (a_p - 1 + (1 - a_m) * exp(-b1 * (a_p - a_m) * t))
     t1_cdf = lambda t: p1_cdf(t) / p1
     if pdf:
         t1_pdf = lambda t: derivative(t1_cdf, t, dx=1e-2)
