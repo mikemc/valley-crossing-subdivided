@@ -136,6 +136,11 @@ def drift_time_cdf_wm(alpha, mu1, delta, s, p2=None, pdf=False):
         return t1_cdf
 
 def ccdf_wm(N, alpha, mu0, mu1, delta, s, p2=None, pdf=False):
+    """Distribution of the time to the first successful double mutant.
+
+    Default: return the ccdf (one minus the cdf)
+    Alternatively, return the pdf
+    """
     # Probability that a double mutant is successful
     if p2 == None:
         p2 = s / alpha
@@ -159,6 +164,8 @@ def ccdf_wm(N, alpha, mu0, mu1, delta, s, p2=None, pdf=False):
         return ccdf
 
 def vc_time_wm(N, alpha, mu0, mu1, delta, s, p2=None):
+    """Average time to first successful double mutant.
+    """
     p1 = p1_wm(alpha, mu1, delta, s, p2) 
     t1 = drift_time_wm(alpha, mu1, delta, s, p2) 
     ccdf = ccdf_wm(N, alpha, mu0, mu1, delta, s, p2)
