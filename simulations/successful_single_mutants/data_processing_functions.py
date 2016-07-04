@@ -11,6 +11,7 @@ def merge_data(filename, tfinal=False, sortby='m'):
     tfinal -- whether or not to include tfinal in the output array. If false,
         data with different tfinals will be merged together, which may be
         misleading when some runs were segregating at time tfinal.
+    sortby --- field to sort output array by
     """
     # Load in raw data from 'filename', assumed to have format
     # Li Lj N mu1 delta s mi mj m tfinal seed num_runs num_success num_seg
@@ -21,6 +22,8 @@ def merge_data(filename, tfinal=False, sortby='m'):
             ('num_runs', np.int_), ('num_success', np.int_), 
             ('num_seg', np.int_)]
     raw_data = np.loadtxt(filename, dtype=raw_dtype, delimiter=' ')
+    # Sort by field chosen in arg sortby
+    raw_data.sort(order=sortby)
     # Consolidate the data by averaging the results from all runs with the same
     # parameters. Store the consolidated data in the array 'merged'
     if tfinal:
