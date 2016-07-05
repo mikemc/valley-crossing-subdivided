@@ -48,9 +48,8 @@ void calc_stats(unsigned long L1, unsigned long L2, unsigned long N,
     double gamma = 0;
     double f4 = 0;
     long i, j, k;
-    // Calculate Fst and gamma. Only defined for 0 < ntot < Ntot
-    // Else if ntot == 0 or 2*Ntot, set Fst and gamma to -1 to indicate
-    // undefined.
+    // Calculate Fst (f2), gamma (f3), and f4.
+    // If ntot == 0 or 2*Ntot, leave as 0.
     if (ntot > 0 && ntot < Ntot) {
         for (i = 0; i < L1; i += 1) {
             for (j = 0; j < L2; j += 1) {
@@ -63,11 +62,6 @@ void calc_stats(unsigned long L1, unsigned long L2, unsigned long N,
         fst = fst / (L * xbar * (1 - xbar));
         gamma = gamma / (L * xbar * (1 - xbar) * (1 - 2 * xbar));
         f4 = f4 / (L * xbar * (1 - xbar) * (1 - 3 * xbar + 3 * xbar * xbar));
-    }
-    else {
-        fst = -1;
-        gamma = -1;
-        f4 = -1;
     }
     /* printf("xbar: %f; ntot: %i; fst: %f\n", xbar, ntot, fst); */
     *fst_cur = fst;
@@ -270,8 +264,8 @@ int main(int argc, char *argv[]) {
         }
         n[0][0] = 1;
         ntot = 1;
-        // Run until lineage is lost or until t_max
-        for (t = 0; (t < t_max) && (ntot != 0); t += 1) {
+        // Run until lineage is lost or fixed or until t_max
+        for (t = 0; (t < t_max) && (ntot != 0) && (ntot != Ntot); t += 1) {
             if (t % step == 0) {
                 // Log ntot and Fst
                 calc_stats(L1, L2, N, n, ntot, &fst, &gamma, &f4);
