@@ -25,12 +25,12 @@
 const gsl_rng_type * T;
 gsl_rng * R;
 
-void calc_stats(unsigned int L1, unsigned int L2, unsigned int N, 
-        unsigned int n[L1][L2], unsigned int ntot, 
+void calc_stats(unsigned long L1, unsigned long L2, unsigned long N, 
+        unsigned long n[L1][L2], unsigned long ntot, 
         double *fst_cur, double *gamma_cur) {
     // Vars
-    unsigned int L = L1 * L2;
-    unsigned int Ntot = N * L;
+    unsigned long L = L1 * L2;
+    unsigned long Ntot = N * L;
     // Total mutant frequency
     double xbar = (double)ntot / Ntot;
     // Local frequency
@@ -38,10 +38,9 @@ void calc_stats(unsigned int L1, unsigned int L2, unsigned int N,
     // Fst and gamma
     double fst = 0;
     double gamma = 0;
-    int i, j, k;
+    long i, j, k;
     // Calculate Fst and gamma. Only defined for 0 < ntot < Ntot
-    // Else if ntot == 0 or 2*Ntot, set Fst and gamma to -1 to indicate
-    // undefined.
+    // Else if ntot == 0 or Ntot, leave Fst and gamma as 0
     if (ntot > 0 && ntot < Ntot) {
         for (i = 0; i < L1; i += 1) {
             for (j = 0; j < L2; j += 1) {
@@ -53,19 +52,15 @@ void calc_stats(unsigned int L1, unsigned int L2, unsigned int N,
         fst = fst / (L * xbar * (1 - xbar));
         gamma = gamma / (L * xbar * (1 - xbar) * (1 - 2 * xbar));
     }
-    else {
-        fst = -1;
-        gamma = -1;
-    }
     /* printf("xbar: %f; ntot: %i; fst: %f\n", xbar, ntot, fst); */
     *fst_cur = fst;
     *gamma_cur = gamma;
 }
 
-void next_gen(unsigned int L1, unsigned int L2, unsigned int N, 
+void next_gen(unsigned long L1, unsigned long L2, unsigned long N, 
         double mu, double s, 
         double m_1, double m_2, double m_inf, 
-        unsigned int n[L1][L2], unsigned int *ntot_cur) {
+        unsigned long n[L1][L2], unsigned long *ntot_cur) {
     /* Parameters:  
      * n[L1][L2] -- counts of genotypes in deme (i,j)
      * s -- selection coefficient of the mutation
@@ -87,18 +82,19 @@ void next_gen(unsigned int L1, unsigned int L2, unsigned int N,
     // total number of demes
     double L = L1 * L2;
     // Total mutant frequency in population _after mutation_
-    /* double xtot = (double)*ntot_cur / (N * L) * (1 - mu) + mu; */
     double xtot = 0;
+    // Counter variables
     int i, j, k;
     // Total number of mutants
     unsigned int ntot = 0;
     // Calculate the frequency within each deme from the count; 
-    // Includes mutation from wt to mutant with probability mu
     for (i = 0; i < L1; i += 1) {
         for (j = 0; j < L2; j += 1) {
-            x[i][j] = (double)n[i][j] * (1 - mu) / N + mu;
-            /* x[i][j] = (double)n[i][j] / N; */
-            /* x[i][j] = x[i][j] * (1 - mu) + mu; */
+            // Before mutation
+            x[i][j] = (double)n[i][j] / N;
+            // Bidirectional mutation with probability mu
+            x[i][j] = x[i][j] * (1 - mu) + (1-x[i][j]) * mu ;
+            // Keep track of total frequency
             xtot += x[i][j];
         }
     }
@@ -131,9 +127,9 @@ void next_gen(unsigned int L1, unsigned int L2, unsigned int N,
 int main(int argc, char *argv[]) {
     long SEED;
     // Number of rows, number of columns, total number of demes
-    unsigned int L, L1, L2; 
+    unsigned long L, L1, L2; 
     // Local population size, global population size;
-    unsigned int N, Ntot; // 
+    unsigned long N, Ntot; // 
     // Migration rates: between rows, between col's, and global
     double m_1, m_2, m_inf; 
     // Mutation rate from wt to mutant
@@ -143,11 +139,13 @@ int main(int argc, char *argv[]) {
     // selection coefficient
     double s; 
     // Time in current run
-    unsigned int t = 0;
+    unsigned long t = 0;
     // Max number of generations to record
-    unsigned int t_max; 
+    unsigned long t_max; 
+    // Generations per stat recording
+    unsigned long step = 1;
     // Total number of A alleles in the entire population
-    unsigned int ntot = 0; 
+    unsigned long ntot = 0; 
     // Current Fst value
     double fst = -1; 
     // Current gamma value
@@ -155,14 +153,14 @@ int main(int argc, char *argv[]) {
     // Data file for recording lineage trajectory
     FILE *data_file;
     // Iterator variables
-    unsigned int run, i, j, k;
+    unsigned long i, j, k;
 
     //Initialize variables:
-    if (argc != 13) {
+    if (argc != 14) {
         // Arg no.'s:  0       1  2  3 4  5  6  7 8    9    10
         printf("Usage: metapop L1 L2 N mu s m1 m2 minf tmax x0 "
-        //     11       12     
-               "ranseed outfile\n");
+        //     11       12      13
+               "ranseed outfile step\n");
         return 0; 
     }
     // Read in command line arguments
@@ -177,6 +175,7 @@ int main(int argc, char *argv[]) {
     t_max = atof(argv[9]);
     x0 = atof(argv[10]);
     SEED = atof(argv[11]);
+    step = atof(argv[13]);
     // Total number of demes and total population size
     L = L1 * L2;
     Ntot = L * N;
@@ -190,9 +189,14 @@ int main(int argc, char *argv[]) {
         printf("Invalid paramters: Wrightian fitness must be >= 0\n");
         return 0; 
     }
+    // Prevent segfault when number of generations to record is too large
+    if (t_max / step > 260000) {
+        printf("Invalid paramters: Must have tmax*step <= 2.6e5\n");
+        return 0; 
+    }
 
     // Print out variables to screen:
-    printf("***Parameters***\nL1 = %u; L2 = %u; N = %u; Ntot = %g\n", 
+    printf("***Parameters***\nL1 = %lu; L2 = %lu; N = %lu; Ntot = %g\n", 
             L1, L2, N, (double)Ntot);
     printf("m_1 = %g; m_2 = %g; m_inf = %g\n", m_1, m_2, m_inf);
     printf("mu = %g; s = %g; x0 = %g\n", mu, s, x0);
@@ -206,11 +210,14 @@ int main(int argc, char *argv[]) {
     gsl_rng_set(R, SEED);
 
     // Array holding counts of the three genotypes in each deme
-    unsigned int n[L1][L2];
-    // Arrays for recording the trajectory of ntot and Fst
-    unsigned int ntot_traj[t_max + 1];
-    double fst_traj[t_max + 1];
-    double gamma_traj[t_max + 1];
+    unsigned long n[L1][L2];
+    // Arrays for recording the trajectory of ntot, Fst, and gamma
+    // Note: This will seg fault if t is too large, so need to make sure
+    // t_max/step is small enough
+    unsigned long ntot_traj[t_max/step + 1];
+    double fst_traj[t_max/step + 1];
+    double gamma_traj[t_max/step + 1];
+
     // Initialize population as frequency x0 in all demes
     ntot = 0;
     for (i = 0; i < L1; i+=1) {
@@ -221,29 +228,43 @@ int main(int argc, char *argv[]) {
     }
     // Run until t_max
     for (t = 0; t < t_max; t += 1) {
-        // Log ntot and Fst
-        calc_stats(L1, L2, N, n, ntot, &fst, &gamma);
-        ntot_traj[t] = ntot;
-        fst_traj[t] = fst;
-        gamma_traj[t] = gamma;
+        if (t % step == 0) {
+            // Log ntot, Fst, and gamma
+            calc_stats(L1, L2, N, n, ntot, &fst, &gamma);
+            ntot_traj[t/step] = ntot;
+            fst_traj[t/step] = fst;
+            gamma_traj[t/step] = gamma;
+        }
         // Evolve for one generation
         next_gen(L1, L2, N, mu, s, m_1, m_2, m_inf, n, &ntot);
     }
     // Log ntot and Fst of last generation
     calc_stats(L1, L2, N, n, ntot, &fst, &gamma);
-    ntot_traj[t] = ntot;
-    fst_traj[t] = fst;
-    gamma_traj[t] = gamma;
+    if (t % step == 0) {
+        k = t / step;
+    }
+    else {
+        k = t / step + 1;
+    }
+    ntot_traj[k] = ntot;
+    fst_traj[k] = fst;
+    gamma_traj[k] = gamma;
 
-    // Open data file and record trajectory of ntot, Fst, and gamma
+    // Open detailed data file and record trajectory of ntot and Fst
     data_file = fopen(argv[12], "w");
-    fprintf(data_file, "# %u %u %u %g %g %g %g %g %g %g %lu\n",
-            L1, L2, N, mu, s, m_1, m_2, m_inf, (double)t_max, x0, SEED);
-    for (j = 0; j < t + 1; j += 1) {
-        fprintf(data_file, "%u %u %10.9f %10.9f\n", j, ntot_traj[j],
-                fst_traj[j], gamma_traj[j]);
+    printf("Recording.\n");
+    fprintf(data_file, "#L1 L2 N mu s m1 m2 m t_max x0 seed\n");
+    fprintf(data_file, "# %lu %lu %lu %g %g %g %g %g %g %g %lu\n",
+            L1, L2, N, mu, s, m_1, m_2, m_inf, (double)t_max,
+            x0, SEED);
+    // Record up to the last time
+    for (j = 0; j < t; j += step) {
+        k = j/step;
+        fprintf(data_file, "%lu %lu %10.9f %10.9f\n", k*step,
+                ntot_traj[k], fst_traj[k], gamma_traj[k]);
     }
     fclose(data_file);
+
 
     return 0;
 }
