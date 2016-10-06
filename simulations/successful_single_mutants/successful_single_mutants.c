@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     // Number of rows, number of columns, total number of demes
     unsigned int L, L1, L2; 
     // Local population size, global population size;
-    unsigned int N, Ntot; // 
+    unsigned long int N, Ntot; // 
     // Migration rates: between rows, between col's, and global
     double m_1, m_2, m_inf; 
     // Fitness params
@@ -129,11 +129,11 @@ int main(int argc, char *argv[]) {
     // Fitnesses of the 3 genotypes
     double w[GTYPES];
     // Total number of runs to simulate
-    unsigned int num_runs = 0;
+    unsigned long int num_runs = 0;
     // Number of runs where lineage is successful
-    unsigned int num_success = 0; 
+    unsigned long int num_success = 0; 
     // Number of runs where lineage is still segregating 
-    unsigned int num_seg = 0; 
+    unsigned long int num_seg = 0; 
     // Time in current run
     unsigned long int t = 0;
     // Max time allowed
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     /* printf("\n"); */
 
     // Print out variables to screen:
-    printf("***Parameters***\nL1 = %u; L2 = %u; N = %u; Ntot = %u\n", 
+    printf("***Parameters***\nL1 = %u; L2 = %u; N = %lu; Ntot = %lu\n", 
             L1, L2, N, Ntot);
     printf("m_1 = %g\nm_2 = %g\nm_inf = %g\n", m_1, m_2, m_inf);
     printf("mu1 = %g; delta = %g; s = %g\n", mu, delta, s);
@@ -269,8 +269,8 @@ int main(int argc, char *argv[]) {
             printf("SUCCESS! ");
             // Final genotype counts
             for (i = 0; i < GTYPES; i++) {
-                fprintf(outfile, "%u ", ntot[i]);
-                printf("%u ", ntot[i]);
+                fprintf(outfile, "%lu ", ntot[i]);
+                printf("%lu ", ntot[i]);
             }
             // Estimated time that successful 2-mutant is generated, and time the 2-mutant fixes.
             if (ntot[2] == Ntot) {
@@ -282,7 +282,7 @@ int main(int argc, char *argv[]) {
                 fprintf(outfile, "%lu %i\n", t_1, -1);
                 printf("%lu %lu", t_1, t_fix);
             }
-            printf("...%u runs to go.\n", num_runs - run);
+            printf("...%g runs to go.\n", (double)(num_runs - run));
         }
         // If lineage is still segregating:
         if ( (ntot[2] + ntot[1] > 0) && (ntot[2] + ntot[1] < Ntot) ) {
@@ -290,8 +290,8 @@ int main(int argc, char *argv[]) {
             printf("Still segregating. ");
             // Final genotype counts
             for (i = 0; i < GTYPES; i++) {
-                fprintf(outfile, "%u ", ntot[i]);
-                printf("%u ", ntot[i]);
+                fprintf(outfile, "%lu ", ntot[i]);
+                printf("%lu ", ntot[i]);
             }
             // If no double-mutants present
             if (t_1 == 0) {
@@ -303,11 +303,11 @@ int main(int argc, char *argv[]) {
                 fprintf(outfile, "%lu %i\n", t_1, -1);
                 printf("%lu %i", t_1, -1);
             }
-            printf("...%u runs to go.\n", num_runs - run);
+            printf("...%g runs to go.\n", (double)(num_runs - run));
         }
     }
     // Write number of successful runs and total number of trials
-    fprintf(outfile, "# %u %u %u %g %g %g %g %g %g %lu %lu %u %u %u\n",
+    fprintf(outfile, "# %u %u %lu %g %g %g %g %g %g %lu %lu %lu %lu %lu\n",
             L1, L2, N, mu, delta, s, m_1, m_2, m_inf, tfinal, SEED, num_runs,
             num_success, num_seg);
     fclose(outfile);
