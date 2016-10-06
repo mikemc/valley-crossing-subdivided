@@ -49,7 +49,7 @@ void calc_stats(unsigned long L1, unsigned long L2, unsigned long N,
     double f4 = 0;
     long i, j, k;
     // Calculate Fst (f2), gamma (f3), and f4.
-    // If ntot == 0 or 2*Ntot, leave as 0.
+    // If ntot == 0 or Ntot, leave as 0.
     if (ntot > 0 && ntot < Ntot) {
         for (i = 0; i < L1; i += 1) {
             for (j = 0; j < L2; j += 1) {
@@ -195,6 +195,7 @@ int main(int argc, char *argv[]) {
         printf("Invalid paramters: Wrightian fitness must be >= 0\n");
         return 0; 
     }
+    // Prevent segfault when number of generations to record is too large
     if (t_max / step > 260000) {
         printf("Invalid paramters: Must have tmax*step <= 2.6e5\n");
         return 0; 
@@ -222,7 +223,7 @@ int main(int argc, char *argv[]) {
     for (run = 0; run < max_tries; run += 1) {
         // Backup rng to rerun once a successful run is found
         gsl_rng_memcpy(R_save, R);
-        // If x0 == 0, start lineage with a single individual in the first deme 
+        // Start lineage with a single individual in the first deme 
         for (i = 0; i < L1; i+=1) {
             for (j = 0; j < L2; j+=1) {
                 n[i][j] = 0;
@@ -230,7 +231,7 @@ int main(int argc, char *argv[]) {
         }
         n[0][0] = 1;
         ntot = 1;
-        // Run each replicate until lineage is lost or until t_max
+        // Run until lineage is lost, hits the target, or time runs out
         for (t = 0; (t < t_max) && (ntot != 0); t += 1) {
             if (ntot >= n_target) {
                 break;
@@ -296,7 +297,7 @@ int main(int argc, char *argv[]) {
         // Open detailed data file and record trajectory of ntot and Fst
         data_file = fopen(argv[12], "w");
         printf("Recording.\n");
-        fprintf(data_file, "#L1 L2 N s m1 m2 m k t_max max_tries x0 seed\n");
+        fprintf(data_file, "#L1 L2 N s m1 m2 m k t_max max_tries seed\n");
         fprintf(data_file, "# %lu %lu %lu %g %g %g %g %lu %g %g %lu\n",
                 L1, L2, N, s, m_1, m_2, m_inf, n_target, (double)t_max,
                 (double)max_tries, SEED);
