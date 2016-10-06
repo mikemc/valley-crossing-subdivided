@@ -2,5 +2,19 @@
 *~
 *.swp
 *.un
+
 figures/
 *__pycache__
+
+# gcc output files
+*.o
+# Executables
+simulations/successful_single_mutants/successful_single_mutants
+simulations/lineage_tracer/lineage_tracer
+simulations/lineage_tracer/lineage_tracer_k
+simulations/lineage_tracer/tracer_mut
+simulations/lineage_tracer/lineage_tracer_Ln
+simulations/lineage_tracer/tracer_haploid
+simulations/lineage_tracer/tracer_fixed
+simulations/valley_crossing_time/vc_time_asex
+simulations/fixation_probability/fixation_probability
