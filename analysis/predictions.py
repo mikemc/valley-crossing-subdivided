@@ -15,7 +15,7 @@ from scipy import integrate, optimize
 from scipy.misc import derivative
 from pylab import *
 from scipy.special import gamma as gammaf
-from scipy.special import erf, erfi, erfcx
+from scipy.special import erf, erfi, erfcx, hyp1f1
 
 ########## Well-mixed populations 
 ##### Basic pop gen results
@@ -120,11 +120,14 @@ def drift_time_cdf_wm(alpha, mu1, delta, s, p2=None, pdf=False):
             / (2 * b1)
     a_m = (d1 + b1 + mu1 - sqrt((d1 - b1 + mu1)**2 + 4 * b1 * mu1 * p2)) \
             / (2 * b1)
-    # Probability successful
-    p1 = 1 - a_m
-    p1_cdf = lambda t: (a_p - 1) * (1 - a_m) * (1 - exp(-b1 * (a_p - a_m)*t))\
+    ## Probability successful
+    # As a function of time
+    p1_t = lambda t: (a_p - 1) * (1 - a_m) * (1 - exp(-b1 * (a_p - a_m)*t))\
             / (a_p - 1 + (1 - a_m) * exp(-b1 * (a_p - a_m) * t))
-    t1_cdf = lambda t: p1_cdf(t) / p1
+    # p1 given by limit as t\to \infty
+    p1 = 1 - a_m
+    ## Drift time cdf or pdf
+    t1_cdf = lambda t: p1_t(t) / p1
     if pdf:
         t1_pdf = lambda t: derivative(t1_cdf, t, dx=1e-2)
         return t1_pdf
@@ -299,22 +302,17 @@ def vc_time_sub_deme_bd(L, N, alpha, mu0, mu1, delta, s, m):
     # upper_lim = np.inf
     return integrate.quad(ccdf, 0, upper_lim)[0]
 
-def min_migration_rate(N, alpha, delta, s):
+def get_eta(N, alpha, delta, s):
     """
 
     """
-    if delta == 0:
-        M = 1.
-        return M * alpha / N, M
     Ne = N / (2 * alpha)
-    # Prob that a 2-mutant fixes in a 1-mutant deme
-    # u2 = fixation_probability(Ne, (delta + s), 1/N)
-    u2 = (s+delta)/alpha / (1 - exp(-N*(s+delta)/alpha))
-    # Probability that a 2-mutant deme spreads through the entire population
+    pfix01 = fixation_probability(Ne, -delta, 1/N)
+    pfix12 = fixation_probability(Ne, s + delta, 1/N)
+    p2 = 1 - exp(-s/alpha)
     theta = 1 - exp(-N*s/alpha)
-    M = (N*delta/alpha) / (exp(N*delta/alpha) - 1) * u2 * theta / (s / alpha)
-    m = M * alpha / N
-    return m, M
+    eta = N * pfix01 * pfix12 * theta / p2
+    return eta
 
 # Low migration limit, time until first successful double-mutant deme
 def sub_tau_no_mig(L, N, alpha, mu0, mu1, delta, s): 
@@ -376,6 +374,156 @@ def sub_tau_no_mig1(L, N, alpha, mu0, mu1, delta, s, rates=False):
 
 ################
 
+def mse_freq(N, alpha, m, delta, mu_f, mu_b=0, upper_lim=None):
+    """Find the MSE frequency of deleterious mutations in the metapop'n.
+
+    N -- population size of a single deme
+    alpha -- drift coefficient
+    m -- migration rate
+    delta -- deleterious selection coefficient
+    mu_f -- forward mutation rate
+    mu_b -- backward mutation rate (not implemented yet)
+
+    Assumes an infinite metapopulation; that is, infinitely many demes of
+    finite size of Ne (effective) haploid individuals per deme. 
+    Assumes a single locus with forward mutation rate mu_f and backward
+    mutation rate mu_b.
+
+    Uses numerical integration instead of the hyp1f1 function
+    """
+    def avg_loc_freq(x):
+        """The average mutant frequency within a deme.
+
+        x -- the frequency of mutants among migrants
+
+        Returns the mean of Wright's distribution given x
+
+        Calculates by numerical integration using the trick described in
+        Kimura, Maruyama, and Crow (1963) "The mutation load in small
+        populations" to deal with possible singularities at the endpoints
+
+        Can alternatively calculate the mean as 
+        A * hyp1f1(1+A, 1 + A+B, -D) / ((A+B) * hyp1f1(A, A+B, -D))
+        However, this fails for large values of N*m/alpha.
+
+        """
+        A = N / alpha * (m * x + mu_f)
+        B = N / alpha * (m * (1 - x))
+        D = N / alpha * delta
+        f = lambda y: exp(-D * y)
+        phi = lambda y: f(y) * y**(A-1) * (1-y)**(B-1)
+        phi_m1 = lambda y: f(y) * y**(A) * (1-y)**(B-1)
+        # integrate phi to find normalization constant
+        I = integrate.quad(lambda y: phi(y) - y**(A-1) - exp(-D)*(1-y)**(B-1),
+                0, 1)[0] + 1/A + exp(-D)/B
+        C = 1 / I
+        # find mean 
+        I = integrate.quad(lambda y: phi_m1(y) - y**A - exp(-D)*y*(1-y)**(B-1),
+                0, 1)[0] + 1/(A+1) + exp(-D)/(B*(B+1))
+        m1 = C * I
+        return m1
+    lower_lim = mu_f / (10 * delta)
+    # Get the MSE frequency as the migrant frequency x where the mean of
+    # Wright's distribution equals x
+    if upper_lim == None:
+        xhat = optimize.newton(lambda x: avg_loc_freq(x) - x, lower_lim)
+    else:
+        xhat = optimize.brentq(lambda x: avg_loc_freq(x) - x, lower_lim, upper_lim)
+    return xhat
+
+def phi_stats(x, N, alpha, m, delta, mu_f=0):
+    """Stats of the distribution phi
+
+    x -- frequency of mutants among migrants
+    N -- number of diploid individuals in a single deme
+    alpha -- drift coefficient
+    m -- migration rate
+    delta -- deleterious selection coefficient
+    mu_f -- forward mutation rate
+
+    Assumes an infinite metapopulation; that is, infinitely many demes of
+    finite size of Ne (effective) haploid individuals per deme. 
+    Assumes a single locus with forward mutation rate mu_f and no back mutation.
+
+    Currently inbreeding not implemented
+
+    """
+    A = N / alpha * (m * x + mu_f)
+    B = N / alpha * (m * (1 - x))
+    D = N / alpha * delta
+    g = lambda y: exp(-D * y)
+    phi = lambda y: g(y) * y**(A-1) * (1-y)**(B-1)
+    phi_m1 = lambda y: g(y) * y**(A) * (1-y)**(B-1)
+    phi_m2 = lambda y: g(y) * y**(A + 1) * (1-y)**(B-1)
+    phi_m3 = lambda y: g(y) * y**(A + 2) * (1-y)**(B-1)
+    # Normalization constant C
+    I = integrate.quad(lambda y: phi(y) - y**(A-1) - exp(-D)*(1-y)**(B-1),
+            0, 1)[0] + 1/A + exp(-D)/B
+    C = 1 / I
+    # First moment (mean)
+    I = integrate.quad(lambda y: phi_m1(y) - y**A - exp(-D)*y*(1-y)**(B-1),
+            0, 1)[0] + 1/(A+1) + exp(-D)/(B*(B+1))
+    m1 = C * I
+    # Second moment
+    I = integrate.quad(lambda y: phi_m2(y) - y**(A+1) - exp(-D)*y**2*(1-y)**(B-1),
+            0, 1)[0] + 1/(A+2) + exp(-D)*2/(B*(B+1)*(B+2))
+    m2 = C * I
+    # Third moment
+    I = integrate.quad(lambda y: phi_m3(y) - y**(A+2) - exp(-D)*y**3*(1-y)**(B-1),
+            0, 1)[0] + 1/(A+3) + exp(-D)*6/(B*(B+1)*(B+2)*(B+3))
+    m3 = C * I
+    # F=f2 and gamma=f3
+    f2 = (m2 - m1**2)/(m1 * (1-m1))
+    f3 = (m3 - m1**2 * (m1 + 3*f2*(1-m1))) / (m1*(1-m1)*(1-2*m1))
+    return m1, m2, m3, f2, f3
+
+def phi_stats_typeA(x, N, alpha, m, delta, mu_f=0):
+    """Stats of the distribution phi for type A lineages only
+
+    x -- frequency of mutants among migrants
+    N -- number of diploid individuals in a single deme
+    alpha -- drift coefficient
+    m -- migration rate
+    delta -- deleterious selection coefficient
+    mu_f -- forward mutation rate
+
+    Assumes an infinite metapopulation; that is, infinitely many demes of
+    finite size of Ne (effective) haploid individuals per deme. 
+    Assumes a single locus with forward mutation rate mu_f and no back mutation.
+
+    Currently inbreeding not implemented
+
+    """
+    A = N / alpha * (m * x + mu_f)
+    B = N / alpha * (m * (1 - x))
+    D = N / alpha * delta
+    phi = lambda y: exp(-D * y) * y**(A-1) * (1-y)**(B-1) - exp(-D)*(1-y)**(B-1) 
+    phi_m1 = lambda y: exp(-D * y) * y**(A) * (1-y)**(B-1) - exp(-D)*y*(1-y)**(B-1)
+    phi_m2 = lambda y: exp(-D * y) * y**(A + 1) * (1-y)**(B-1) - exp(-D)*y**2*(1-y)**(B-1)
+    phi_m3 = lambda y: exp(-D * y) * y**(A + 2) * (1-y)**(B-1) - exp(-D)*y**3*(1-y)**(B-1)
+    # Normalization constant C
+    I = integrate.quad(lambda y: phi(y) - y**(A-1),
+            0, 1)[0] + 1/A
+    C = 1 / I
+    # First moment (mean)
+    I = integrate.quad(lambda y: phi_m1(y) - y**A,
+            0, 1)[0] + 1/(A+1)
+    m1 = C * I
+    # Second moment
+    I = integrate.quad(lambda y: phi_m2(y) - y**(A+1),
+            0, 1)[0] + 1/(A+2)
+    m2 = C * I
+    # Third moment
+    I = integrate.quad(lambda y: phi_m3(y) - y**(A+2),
+            0, 1)[0] + 1/(A+3)
+    m3 = C * I
+    # F=f2 and gamma=f3
+    f2 = (m2 - m1**2)/(m1 * (1-m1))
+    f3 = (m3 - m1**2 * (m1 + 3*f2*(1-m1))) / (m1*(1-m1)*(1-2*m1))
+    return m1, m2, m3, f2, f3
+
+
+
 def feq_locally_deleterious(N, alpha, delta, m, approx=0, lintype=0):
     """Heuristic approximation for equilibrium Fst when N*delta/alpha >> 1.
 
@@ -433,3 +581,5 @@ def feq_locally_deleterious(N, alpha, delta, m, approx=0, lintype=0):
     # Fst found by averaging over both types of lineages
     F = (F1 * W1 + F2 * W2) / (W1 + W2)
     return F
+
+
