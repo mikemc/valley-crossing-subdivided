@@ -1,0 +1,185 @@
+"""Figure of $p_1$ for D=8 showing main results.
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/analysis/']
+import predictions as pred
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+
+##### Set parameters and load the data
+# Parameters
+L = 50; N = 1e2; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+mu1 = 4e-8; delta = 4e-2; s = 5e-2;
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/successful_single_mutants/
+% cd output/island_L50_N1e2_mu4e-8_d4e-2_s5e-2
+df = np.load('summary_data.npy')
+# The 2-mutant often does not fix by tfinal in the runs with m=1e-8 and 1e-9
+# However, we will # count the still segregating runs as successes in this
+# case; this is justified since theta \approx 1.
+df[0]['num_success'] += df[0]['num_seg']
+df[1]['num_success'] += df[1]['num_seg']
+# Leave out the data point where m=m^\dagger
+df = df[df['m'] != 2.4e-5]
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((2.92, 1.7))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-10, 1)
+# Major tick marks at special locations
+m_dagger = delta * (delta + s) / (s * (exp(N*delta/alpha)-1))
+ax.set_xticks((mu1 * (1 + s / delta), m_dagger, alpha/N))
+# ax.set_xticklabels((r'$\mu_1 \left(1 + \frac{s}{\delta}\right)$', 
+#     r'$m^\dagger$', r'$\frac{\alpha}{N}$'))
+ax.set_xticklabels((r'$\frac{\mu_1 (\delta + s)}{\delta}$', 
+    r'$\frac{\eta\alpha}{N}$', r'$\frac{\alpha}{N}$'))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks((1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1),
+        minor=True)
+ax.set_xticklabels((r'$10^{-9}$',) + ('',)*8 + (r'$1$',), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(5e-8, 5e-5)
+# Major tick marks at special locations
+ax.set_yticks((delta / (alpha * exp(N*delta/alpha)), mu1*s/(alpha*delta)))
+ax.set_yticklabels((r'$\frac{\delta}{\alpha e^{N\delta/\alpha}}$', 
+    r'$\frac{\mu_1 s}{\alpha\delta}$'))
+# Minor ticks to denote orders of magnitude
+ax.set_yticks((1e-6, 1e-5), minor=True)
+ax.set_yticklabels((r'$10^{-6}$', r'$10^{-5}$'), minor=True)
+# Y label horizontal and above axis
+ylab = text(1e-11, 6e-5, 
+    r'\noindent Probability single mutant\\is successful, $p_1$', 
+    horizontalalignment='left', verticalalignment='bottom')
+
+## Theoretical prediction
+# Non-neutral equilibrim Fst approximation
+m_arr = np.logspace(-9.5, 0, 300)
+# Feqd_arr = 1 / (N * (m_arr + delta) / alpha)
+# p1_eq_arr = mu1 * s / (alpha * delta * (1 - Feq_arr))
+p1A_arr = np.repeat(mu1 * s / (alpha * delta), len(m_arr))
+plot(m_arr, p1A_arr, 'k-', color=color_pred, 
+        label=r'$\hat{F}_\text{del}$ prediction')
+# Locally deleterious deme birth-death
+# Local fixation probabilities
+u10 = delta/alpha / (exp(N*delta/alpha) - 1)
+u01 = delta/alpha / (1 - exp(-N*delta/alpha))
+u21 = (s+delta)/alpha / (1 - exp(-N*(s+delta)/alpha))
+# Probability that a 2-mutant deme spreads through the entire population
+theta = 1 - exp(-N*s/alpha)
+p1B_arr = u10 * mu1 * u21 * theta / (m_arr * u01 + mu1 * u21)
+plot(m_arr, p1B_arr, 'k--', color=color_pred, 
+        label=r'DBD prediction')
+# Sum of the two pathways
+plot(m_arr, p1A_arr + p1B_arr, 'k:', color='k', 
+        label=r'Both pathways')
+
+# ## Testing of the MSE approximation
+# # MSE approximation underestimates p1 if don't account for increase in p2
+# m_arr = np.logspace(-8, 0, 200)
+# xtot = 1e-10
+# f_arr = np.array([pred.phi_stats(xtot, N, alpha, m, delta)[3] for m in m_arr])
+# p1_arr = mu1 * s / (alpha * delta * (1-f_arr))
+# plot(m_arr, p1_arr, 'k-.', color=color_pred, label=r'Predicted')
+
+## Simulation results 
+# Estimated p1
+p1_est = df['num_success'] / df['num_runs']
+# Estimated standard error of the estimated p1
+p1_se = np.sqrt(p1_est / df['num_runs'])
+# This is small enough that we shouldn't need to plot it. Always double check
+# this on the final figure.
+# errorbar(df['m'], p1_est, yerr=1.96*p1_se, fmt='k^', label=r'$p_1$', clip_on=False)
+plot(df['m'], p1_est, 'ko', clip_on=False, label=r'$p_1$')
+
+# Color the regions corresponding to the different regimes
+# isolated demes, deleterious
+axvspan(0, mu1 * (1 + s/delta),
+        facecolor='#fdae6b', linewidth=0)
+# subdivided, locally deleterious
+axvspan(mu1 * (1 + s/delta), m_dagger,
+        facecolor='#3182bd', linewidth=0)
+# unstructured, deleterious
+axvspan(m_dagger, 1, 
+        facecolor='#a1d99b', linewidth=0)
+
+# ## Text
+# # Add regime labels
+# # Unstructured, deleterious
+# center = sqrt(m_dagger)
+# p1_center = p1_eq_arr[(np.abs(m_arr - center)).argmin()]
+# text_unstructured = text(center, p1_center * 10**0.5, 
+#         r'{\centering unstructured\\deleterious\\}', color='0',
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Subdivided, locally deleterious
+# center = sqrt(m_dagger * mu1 * (1 + s/delta))
+# p1_center = p1_dbd_arr[(np.abs(m_arr - center)).argmin()]
+# text_subdivided = text(center, 5e-5,
+#         r'{\centering subdivided\\locally deleterious\\}', color='0',
+#         horizontalalignment='center', verticalalignment='top')
+# # Isolated demes, locally deleterious
+# center = sqrt(1e-10 * mu1 * (1 + s/delta))
+# p1_center = p1_dbd_arr[(np.abs(m_arr - center)).argmin()]
+# text_isolated = text(center, p1_center / 10**0.5,
+#         r'{\centering isolated demes\\locally\\deleterious\\}', color='0',
+#         horizontalalignment='center', verticalalignment='top')
+# # text_isolated = text(center * 10**0.2, p1_center / 10**0.5,
+# #         r'{\centering isolated demes\\locally deleterious\\}', color='0',
+# #         horizontalalignment='center', verticalalignment='top')
+
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks().min(), ax.get_yticks().max())
+# ax.spines['bottom'].set_bounds(m_arr.min(), m_arr.max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+
+# Save figure
+# In Genetics Overleaf example file, width of a one-column figure is 3.461 in
+# and entire page width (text area) is 7.275 inches
+# However, in current genetics articles the text-page size is 7.022 in and one
+# column of text is 3.406 in. 
+# I will aim for 3.4 inches for a one-column figure.
+
+# If a cla() has been called, it is necessary to first call this again:
+# fig.set_size_inches(2 * axes_size)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/p1_D8.pdf', bbox_inches='tight', pad_inches=0.02)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/p1_D8.pdf', bbox_inches='tight', pad_inches=0.02)
+
+

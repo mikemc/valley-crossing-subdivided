@@ -1,0 +1,155 @@
+"""Sweep time as function of migration for locally neutral double mutants
+(S=2e-1).
+
+Sweeps simulated by setting mu_1 = 1 in single-mutant lineage simulations.
+
+"""
+
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+src_path = '/home/michael/research/valley_crossing/metapopulations/asexual/src/'
+sys.path += [src_path + 'analysis/',
+    src_path + 'simulations/successful_single_mutants/',
+]
+import predictions as pred
+from data_processing_functions import read_times
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+
+##### Set parameters and load the data
+# Parameters
+L = 100; N = 1e2; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+s = 1e-3;
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/successful_single_mutants/
+% cd output/sweep_time
+
+filenames=[
+    'asex_p1_Li1e2_Lj1_N1e2_mu1_d0_s1e-3_mi0_mj0_m1e-1_run0',
+    'asex_p1_Li1e2_Lj1_N1e2_mu1_d0_s1e-3_mi0_mj0_m1e-2_run0',
+    'asex_p1_Li1e2_Lj1_N1e2_mu1_d0_s1e-3_mi0_mj0_m1e-3_run0',
+    'asex_p1_Li1e2_Lj1_N1e2_mu1_d0_s1e-3_mi0_mj0_m1e-4_run0',
+    'asex_p1_Li1e2_Lj1_N1e2_mu1_d0_s1e-3_mi0_mj0_m1e-5_run0',
+]
+# m_sim_arr = array([1e-1, 3e-2, 1e-2, 3e-3, 1e-3, 3e-4, 1e-4])
+# m_sim_arr = array([1e-1, 1e-2, 1e-3, 1e-4])
+m_sim_arr = array([1e-1, 1e-2, 1e-3, 1e-4, 1e-5])
+tsw_arr = array([read_times(fname, summary=True)['tsw'][0] for fname in filenames])
+se_arr = array([read_times(fname, summary=True)['tsw_se'][0] for fname in filenames])
+
+
+## Predictions
+m_arr = np.logspace(-5, -1, 1e2)
+f_arr = 1 / (1 + N * m_arr / alpha)
+stot_arr = (1 - f_arr) * s
+# Plot
+loglog(m_arr, 2 * (0.577 + log(Ntot * s / alpha - 1)) / stot_arr, 'k-', color=color_pred)
+
+
+## Simulations
+loglog(m_sim_arr, tsw_arr, 'ko')
+# errorbar(m_sim_arr, tsw_arr, yerr=se_arr)
+
+# Line at m=alpha/N
+axvline(alpha/N, color='k')
+
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((3, 1.75))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+## Spines
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-5, 1e-1)
+#
+ax.set_xticks((), minor=True)
+
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(1e3, 1e7)
+ax.set_yticks((), minor=True)
+# Y label horizontal and above axis
+# ylab = text(2e-7, 2.5e6, 
+#     r'\noindent Average sweep time, $\avg{\mathcal T_\text{sw}}$', 
+#     horizontalalignment='left', verticalalignment='bottom')
+ylab = text(3e-6, 2e7, 
+    r'\noindent Average sweep time, $\avg{\mathcal T_\text{sw}}$', 
+    horizontalalignment='left', verticalalignment='bottom')
+
+## Predictions
+m_arr = np.logspace(-6, -1, 1e2)
+f_arr = 1 / (1 + N * m_arr / alpha)
+stot_arr = (1 - f_arr) * s
+# Plot
+plot(m_arr, 2 * (0.577 + log(Ntot * s / alpha - 1)) / stot_arr, 'k-', color=color_pred)
+
+# Line at m=alpha/N
+y_vals = np.logspace(3, 6.5, 1e2)
+x_val = alpha/N
+plot(np.repeat(x_val, 1e2), y_vals, color='k', ls=':')
+
+## Simulations
+plot(m_sim_arr, tsw_arr, 'ko', clip_on=False)
+# errorbar(m_sim_arr, tsw_arr, yerr=se_arr)
+
+## Spines
+# offset axes outward
+ax.spines['left'].set_position(('outward', 10))
+ax.spines['bottom'].set_position(('outward', 10))
+
+# Extra top axis to mark special migration rates
+axB = ax.twiny()
+axB.spines['left'].set_visible(False)
+axB.spines['top'].set_visible(False)
+axB.spines['right'].set_visible(False)
+axB.spines['bottom'].set_visible(False)
+axB.spines['top'].set_position(('outward', -15))
+axB.xaxis.set_ticks_position('top')
+axB.xaxis.set_tick_params(which='major', length=0)
+
+axB.set_xscale("log")
+axB.set_xlim(1e-5, 1e-1)
+axB.set_xticks((alpha/N,))
+axB.set_xticklabels((r'$\frac{\alpha}{N}$',))
+# axB.set_xticklabels((r'$\frac{\alpha}{2N\ln\left[\tfrac{Ns}{\alpha}\right]}$', r'$\frac{\alpha}{N}$', r'$s$'))
+axB.set_xticks((), minor=True)
+
+## Save the figures
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size, forward=True)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/tsw_S2e-1.pdf',
+        bbox_inches='tight', pad_inches=0.02)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/tsw_S2e-1.pdf', bbox_inches='tight', pad_inches=0.02)
+
+

@@ -1,0 +1,209 @@
+"""Distribution of the valley-crossing time.
+
+Notes: For these parameters, m^* = 5e-6, while the migration rate used is m =
+1e-5. Thus, the drift time estimated by the Feq approximation overestimates the
+actual drift time, by ~10%, and so the DBD approximation is used.
+The average drift time is ~ 8.4e4, while the average T0 is ~ 2e5, or about 2.4
+times larger.
+Thus, the subdivided population is close to the boundary with the neutral
+semi-det regime.
+
+The average v.c.t. by the DBD numerical prediction is ~ 2.8e5, fairly close to
+what we get by adding T0 and T1.
+
+The average v.c.t. in the unstructured population is ~ 1.4e6, or about 5 times longer.
+
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+src_path = '/home/michael/research/valley_crossing/metapopulations/asexual/src/'
+sys.path += [src_path + 'analysis/',
+    src_path + 'simulations/valley_crossing_time/',
+]
+
+import predictions as pred
+from process_data import read_outfile
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+color_sub = '#e6550d'
+color_wm = '0.5'
+
+##### Set parameters and load the data
+# Parameters
+L = 1000; N = 500; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+mu0 = 1e-8; mu1 = 1e-7;
+delta = 0; s = 5e-2;
+p2 = s / alpha
+m = 1e-5 # Picked so that Nm/alpha = 0.01
+
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/valley_crossing_time/output/distribution_comparision_D0
+# Subdivided simulations
+df_sub_short = read_outfile(
+    'asexLi1e3_Lj1_N5e2_mu1e-8_mu1e-7_d0_s5e-2_mi0_mj0_m1e-5_tmax5e4'
+    )
+df_sub_long = read_outfile(
+    'asexLi1e3_Lj1_N5e2_mu1e-8_mu1e-7_d0_s5e-2_mi0_mj0_m1e-5_tmax1e10'
+    )
+# Unstructured simulations
+df_wm_short = read_outfile(
+    'asexLi1_Lj1_N5e5_mu1e-8_mu1e-7_d0_s0.05_mi0_mj0_m0_run0_tmax5e4'
+    )
+df_wm_long = read_outfile(
+    'asexLi1_Lj1_N5e5_mu1e-8_mu1e-7_d0_s0.05_mi0_mj0_m0_run0_tmax1e10'
+    )
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((3, 1.75))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+## Spines
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Time, $t$", labelpad=0)
+ax.set_xscale("log")
+ax.set_xlim(1e3, 10**6.65)
+# Major tick marks at special locations
+# ax.set_xticks(( log(2) / sqrt(mu1 * s), 
+#     log(2) / sqrt(N*m*mu1*s/alpha) ))
+# ax.set_xticklabels((r'$\frac{\ln(2)}{\sqrt{\mu_1 s}}$', 
+#     r'$\frac{\ln(2)\sqrt{\alpha}}{\sqrt{Nm\mu_1 s}}$'))
+t1_wm = log(2) / sqrt(mu1 * s)
+t1_sub = pred.drift_time_sub_deme_bd(N, alpha, mu1, delta, s, m)
+# ax.set_xticks((t1_wm, t1_sub))
+# ax.set_xticklabels((r'$\avg{\mathcal T_{1,\mathrm{wm}}}$', 
+#     r'$\avg{\mathcal T_{1,\mathrm{sub}}}$' ))
+ax.set_xticks((t1_wm, ))
+ax.set_xticklabels((r'$\frac{\ln 2}{\sqrt{\mu_1 s}}$', ))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks(10**arange(3.5, 6.6, 0.5), minor=True)
+# ax.set_xticklabels((r'$10^{3.5}$',) + ('',)*5 + (r'$10^{6.5}$',), minor=True)
+ax.set_xticklabels((r'$10^{3.5}$', '', '', r'$10^{5}$', '', '', r'$10^{6.5}$'), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(3e-5, 3)
+# Major tick marks at special locations
+ax.set_yticks(())
+ax.set_yticklabels(())
+# Minor ticks to denote orders of magnitude
+ax.set_yticks((1e-4, 1e-3, 1e-2, 1e-1, 1), minor=True)
+ax.set_yticklabels((r'$10^{-4}$', '', r'$10^{-2}$', '', r'$1$'), minor=True)
+# Y label horizontal and above axis
+ylab = text(10**2.65, 2.2, 
+    r'\noindent Probability of a successful\\double mutant by $t$', 
+    horizontalalignment='left', verticalalignment='bottom')
+
+# TNT: consider the error bars in the simulation results; clip displayed data
+# to region where error is small?
+# Determine region to display data and how to set axes limits and ticks
+
+#### Theoretical predictions
+## Well mixed, neutral stochastic tunneling
+p1 = sqrt(mu1 * s) / alpha
+mean_t0 = 1 / (Ntot * mu0 * p1)
+mean_t1 = log(2) / sqrt(mu1 * s)
+t_arr = np.logspace(3.35, 6.65, 1e3)
+ccdf = pred.ccdf_wm(Ntot, alpha, mu0, mu1, delta, s, pdf=False)
+cdf_arr = array([1 - ccdf(t) for t in t_arr])
+## Subdivided, Nm/alpha = 0.01
+# A = 0.01 / (1 + 0.01)
+# ccdf = pred.ccdf_wm(Ntot, alpha * A, mu0, mu1, delta * A, s * A, pdf=False)
+# cdf_arr = array([1 - ccdf(t) for t in t_arr])
+# plot(t_arr, cdf_arr, 'k-', color='#FF9900', label=r'Predicted', clip_on=False ) 
+ccdf_dbd = pred.ccdf_sub_deme_bd(L, N, alpha, mu0, mu1, delta, s, m, pdf=False)
+cdf_arr_dbd = array([1 - ccdf_dbd(t) for t in t_arr])
+# Plot the two theoretical predictions
+plot(t_arr, 1 - exp(-Ntot*mu0*mu1*s*t_arr**2/(2*alpha)), 'k--', color='0.5',
+        label=r'neutral semi-det') 
+plot(t_arr, cdf_arr, 'k-', color=color_wm,
+        label=r'unstructured') 
+plot(t_arr, cdf_arr_dbd, 'k-', color=color_sub,
+        label=r'subdivided') 
+
+
+#### Simulation data
+df_ss = df_sub_short[df_sub_short['t2']!=0]
+df_sl = df_sub_long[df_sub_long['t2']!=0]
+num_ss = len(df_sub_short)
+num_sl = len(df_sub_long)
+
+df_wms = df_wm_short[df_wm_short['t2']!=0]
+df_wml = df_wm_long[df_wm_long['t2']!=0]
+num_wms = len(df_wm_short)
+num_wml = len(df_wm_long)
+
+# Build cumulative hist for the first 5e4 generations, combining results from
+# short and long runs
+bins = np.logspace(3.5, log10(5e4), 10)
+# Subdivided
+h_ss = zeros(len(bins))
+for i in range(len(bins)):
+    h_ss[i] = sum(df_ss['t2'] <= bins[i]) + sum(df_sl['t2'] <= bins[i])
+# Unstructured
+h_wms = zeros(len(bins))
+for i in range(len(bins)):
+    h_wms[i] = sum(df_wms['t2'] <= bins[i]) # + sum(df_wml['t2'] <= bins[i])
+# Hist for 5e4 < t < 2e6 using long runs
+# To keep same spacing, keep number of bins in 2:3 ratio
+bins_l = np.logspace(log10(5e4), 6.5, 15)
+# Subdivided
+h_sl = zeros(len(bins_l))
+for i in range(len(bins_l)):
+    h_sl[i] = sum(df_sl['t2'] <= bins_l[i])
+# Unstructured
+h_wml = zeros(len(bins_l))
+for i in range(len(bins_l)):
+    h_wml[i] = sum(df_wml['t2'] <= bins_l[i])
+
+# Plot the observed cdf points
+plot(bins, h_ss / (num_ss + num_sl), 'ko', alpha=1, clip_on=False)
+plot(bins, h_wms / (num_wms + num_wml), 'w^', alpha=0.6, color=color_wm, clip_on=False)
+plot(bins_l[1:], h_sl[1:] / num_sl, 'ko', alpha=1, clip_on=False)
+plot(bins_l[1:], h_wml[1:] / num_wml, 'w^', alpha=0.6, color=color_wm, clip_on=False)
+
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks(minor=True).min(), ax.get_yticks(minor=True).max())
+# ax.spines['bottom'].set_bounds(m_arr.min(), m_arr.max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+
+# Save figure
+# %cd ~/Dropbox/research/valley_crossing/metapopulations/asexual/tex/figures/
+# In Genetics Overleaf example file, width of a one-column figure is 3.461 in
+# and entire page width (text area) is 7.275 inches
+# However, in current genetics articles the text-page size is 7.022 in and one
+# column of text is 3.406 in. 
+# I will aim for 3.4 inches for a one-column figure.
+
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size, forward=True)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/neutral_short_times.pdf', bbox_inches='tight', pad_inches=0.02)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/neutral_short_times.pdf', bbox_inches='tight', pad_inches=0.02)
+

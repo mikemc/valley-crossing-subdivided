@@ -1,0 +1,232 @@
+"""
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+src_path = '/home/michael/research/valley_crossing/metapopulations/asexual/src/'
+sys.path += [src_path + 'analysis/',
+    src_path + 'simulations/valley_crossing_time/',
+]
+import predictions as pred
+from process_data import summarize_outfiles
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+
+##### Set parameters and load the data
+# Parameters
+L = 100; N = 1e2; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+# mu0 = 1e-7; mu1 = 1e-8; 
+mu0 = 5e-7; mu1 = 1e-8; 
+delta = 1e-3; s = 5e-2;
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/valley_crossing_time/
+% cd output/island_L1e2_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2
+filenames = ["asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-1_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-2_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-3_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-4_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-5_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-6_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-7_all",
+    "asexLi100_Lj1_N1e2_mu5e-7_mu1e-8_d1e-3_s5e-2_mi0_mj0_m1e-8_all"]
+est_t2, est_tfix = summarize_outfiles(filenames)
+m_sim = array((1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8))
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((3, 1.75))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-9, 1)
+# Major tick marks at special locations
+ax.set_xticks((N*mu1*s/alpha, (alpha/N) * mu1*s/delta**2, alpha/N,))
+ax.set_xticklabels((r'$\frac{N\mu_1 s}{\alpha}$', 
+    r'$\frac{\alpha\mu_1 s}{N\delta^2}$', 
+    r'$\frac{\alpha}{N}$',))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks((1e-8, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1), minor=True)
+ax.set_xticklabels(((r'$10^{-8}$',) + ('',)*6 + (r'$1$',)), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(3e5, 4e8)
+# Major tick marks at special locations
+ax.set_yticks((
+    (alpha*delta)/(Ntot*mu0*mu1*s), 
+    sqrt(pi*alpha/(2*Ntot*mu0*mu1*s))
+    ))
+ax.set_yticklabels((
+    r'$\frac{\alpha\delta}{N_\mathrm{T} \mu_0 \mu_1 s}$', 
+    r'$\sqrt{\frac{\pi \alpha}{2 N_\mathrm{T} \mu_0 \mu_1 s}}$'
+    ))
+# Minor ticks to denote orders of magnitude
+ax.set_yticks((1e6, 1e7, 1e8), minor=True)
+ax.set_yticklabels(('', r'$10^{7}$', ''), minor=True)
+# Y label horizontal and above axis
+ylab = text(1e-10, 5e8, 
+    # r'\noindent Average time to\\successful double mutant', 
+    r'\noindent Average time\\to adapt', 
+    horizontalalignment='left', verticalalignment='bottom')
+
+## Theoretical prediction by combining two approximations
+m_arr = np.logspace(-8.5, 0, 1e3)
+# Equilibrium Fst approximation for the valley crossing time
+Feq_arr = 1 / (1 + N * m_arr / alpha)
+vct_feq_arr = np.array([pred.vc_time_wm(Ntot, alpha*(1-F), mu0, mu1,
+    delta*(1-F), s*(1-F), p2=s/alpha) for F in Feq_arr])
+# This ^^ gives nan's at low migration rates
+# Deme birth-death approximation for the valley crossing time
+vct_dbd_arr = np.array([pred.vc_time_sub_deme_bd(L, N, alpha, mu0, mu1, delta, s,
+    m) for m in m_arr])
+# Calculate the weights of each approximation to be high in the appropriate
+# migration range
+m_star = N * mu1 * s / alpha
+m_dagger = alpha / N
+weight_feq = m_arr / m_star
+weight_dbd = m_dagger / m_arr
+# Smooth together both approximations
+vct_avg_arr = (vct_feq_arr * weight_feq + vct_dbd_arr * weight_dbd) / (weight_feq +
+        weight_dbd)
+# Get rid of nan's at low migration rates by substituting with vct_dbd_arr
+vct_avg_arr[isnan(vct_avg_arr)] = vct_dbd_arr[isnan(vct_avg_arr)]
+
+## Sweep time
+# Approximation for the sweep time when N*m/alpha<<1 and N*s/alpha>>1
+t_sw_arr = 2 * (0.577 + log(L)) / (N * m_arr * s / alpha)
+
+# Approx accounting for growth of double mutant demes early on by denovo mutations
+# st_arr = N*m_arr*s/alpha
+# a_arr = log(L*st_arr**2 / (2*Ntot*mu0*mu1*s/alpha)) / st_arr + (0.577 + log(L)) / (N * m_arr * s / alpha)
+# plot(m_arr, vct_avg_arr + a_arr, 'k-', label=r'', color='b', lw=0.5)
+
+# Plot total time to fixation of the double mutant
+# The hard sweep approximation, overestimates at m <= 1e-8 b/c ignores multiple
+# sweeping double-mutant lineages
+plot(m_arr, vct_avg_arr + t_sw_arr, 'k-', label=r'', color='0.5', lw=0.5)
+
+# Plot time to first successful double mutant
+plot(m_arr, vct_avg_arr, 'k-', label=r'', color=color_pred,)
+
+## Simulation results
+# # Fixation time
+# errorbar(m_sim, est_tfix['mean'], yerr=1.96*est_tfix['se'], fmt='ko',
+#         label=r'$\mathcal T_\text{fix}$', clip_on=False)
+# # Valley-crossing time
+# errorbar(m_sim, est_t2['mean'], yerr=1.96*est_t2['se'], fmt='ko',
+#         label=r'$\mathcal T$', clip_on=False)
+# Fixation time
+plot(m_sim, est_tfix['mean'], 'wo',
+        label=r'', clip_on=False)
+# Valley-crossing time
+plot(m_sim, est_t2['mean'], 'ko',
+        label=r'', clip_on=False)
+
+# Mark where T0 = T1
+m_semidet = alpha/(N*delta)*sqrt(Ntot*mu0*mu1*s/alpha)
+# axvline(m_semidet,
+#         lw=0.5, ls=':', color='k', label='')
+# text_semidet = text(m_semidet, 3.3e8, 
+#     r'$\E[\mathcal T_0] = \E[\mathcal T_1]$', 
+#     horizontalalignment='center', verticalalignment='bottom')
+
+vct_semidet = vct_avg_arr[(np.abs(m_arr - m_semidet)).argmin()]
+# arrow_semidet = annotate(r'$\E[\mathcal T_0] = \E[\mathcal T_1]$', 
+#         xy=(m_semidet, vct_semidet), xycoords='data',
+#         xytext=(m_semidet/25, vct_semidet * 10), textcoords='data',
+#         arrowprops=dict(arrowstyle='simple', facecolor='black',
+#             linewidth=0))
+arrow_semidet = annotate(r'$\avg{\mathcal T_0} = \avg{\mathcal T_1}$', 
+        xy=(m_semidet, vct_semidet), xycoords='data',
+        xytext=(m_semidet * 10**1.5, vct_semidet), textcoords='data',
+        arrowprops=dict(arrowstyle='simple', facecolor='black',
+            linewidth=0))
+
+# # Label the two sets of predictions
+# # Time successful double mutant first produced
+# center = 1e-8
+# vct_center = vct_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_produced = text(center*2, vct_center*1.3, r'{\centering first\\produced\\}',
+#         color = color_pred,
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Time double mutant fixed
+# left = 1e-8
+# index = (np.abs(m_arr - left)).argmin()
+# fixed_bot = vct_avg_arr[index] + t_sw_arr[index]
+# text_fixed = text(left, fixed_bot * 1.2, r'fixed',
+#         color = '0.5',
+#         horizontalalignment='left', verticalalignment='bottom')
+
+# Label the two sets of predictions
+# Time successful double mutant first produced
+center = 1e-8
+vct_center = vct_avg_arr[(np.abs(m_arr - center)).argmin()]
+text_produced = text(center*2, vct_center*1.3, r'$\avg{\mathcal T}$',
+        color = color_pred,
+        horizontalalignment='center', verticalalignment='bottom')
+# Time double mutant fixed
+left = 1e-8
+index = (np.abs(m_arr - left)).argmin()
+fixed_bot = vct_avg_arr[index] + t_sw_arr[index]
+# text_fixed = text(left, fixed_bot * 1.2, r'$\avg{\mathcal{T}}+\mathcal T_\text{sw}$',
+text_fixed = text(left, fixed_bot * 1.2, r'$\avg{\mathcal{T}+\mathcal T_\text{sw}}$',
+        color = '0.5',
+        horizontalalignment='left', verticalalignment='bottom')
+
+# Color the regions corresponding to the different regimes
+# isolated demes
+axvspan(0, N*mu1*s/alpha, 
+        facecolor='#fee6ce', linewidth=0)
+# subdivided, neutral
+axvspan(N*mu1*s/alpha, (alpha/N) * mu1*s/delta**2, 
+        facecolor='#deebf7', linewidth=0)
+# subdivided, deleterious
+axvspan((alpha/N) * mu1*s/delta**2, alpha/N, 
+        facecolor='#9ecae1', linewidth=0)
+# unstructured, deleterious
+axvspan(alpha/N, 1, 
+        facecolor='#a1d99b', linewidth=0)
+
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks().min(), ax.get_yticks().max())
+# ax.spines['bottom'].set_bounds(m_arr.min(), m_arr.max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+
+# Save figure
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size, forward=True)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/vct_D2e-1.pdf', bbox_inches='tight', pad_inches=0.03)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/vct_D2e-1.pdf', bbox_inches='tight', pad_inches=0.03)
+

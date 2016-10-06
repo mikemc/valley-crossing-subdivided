@@ -1,0 +1,190 @@
+"""Figure of $p_1$ for effectively neutral single mutants showing main results.
+
+SI figure in same style as main p1 figures in main text.
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/analysis/']
+import predictions as pred
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+
+##### Set parameters and load the data
+# Parameters
+L = 200; N = 1e3; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+mu1 = 5e-8; delta = 1e-6; s = 5e-2;
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/successful_single_mutants/
+% cd output/island_L2e2_N1e3_mu5e-8_d1e-6_s5e-2
+df = np.load('summary_data.npy')
+# Count runs where lineage was still segregating as a success
+df['num_success'] = df['num_success'] + df['num_seg']
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+# axes_size = array((3, 1.75))
+axes_size = array((2.8, 1.75))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+## Spines
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-9, 3)
+# Major tick marks at special locations
+ax.set_xticks((N*mu1*s/alpha, alpha/N,))
+ax.set_xticklabels((r'$\frac{N\mu_1 s}{\alpha}$', 
+    r'$\frac{\alpha}{N}$',))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks((1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1), minor=True)
+ax.set_xticklabels((r'$10^{-8}$',) + ('',)*7 + (r'$1$',), minor=True)
+# ax.set_xticklabels((r'$10^{-8}$', '', '', '', r'$10^{-4}$', '', '', '', r'$1$'), minor=True)
+# ax.set_xticklabels((r'$10^{-8}$', '', r'$10^{-6}$', '', r'$10^{-4}$', '',
+#     r'$10^{-2}$', '', r'$1$'), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(5e-5, 2e-3)
+ax.set_yticks((), minor=True)
+# Major tick marks at special locations
+ax.set_yticks((sqrt(mu1*s)/alpha, 1/N))
+ax.set_yticklabels((r'$\frac{\sqrt{\mu_1 s}}{\alpha}$', 
+    r'$\frac{1}{N}$'))
+# Y label horizontal and above axis
+ylab = text(2e-10, 2.3e-3,
+    r'\noindent Probability single mutant\\is successful, $p_1$', 
+    horizontalalignment='left', verticalalignment='bottom')
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks().min(), ax.get_yticks().max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+# Use right axis to display numerical scale
+axR = ax.twinx()
+axR.spines['left'].set_visible(False)
+axR.spines['bottom'].set_visible(False)
+axR.spines['top'].set_visible(False)
+axR.spines['right'].set_visible(True)
+axR.set_yscale("log")
+axR.set_ylim(5e-5, 2e-3)
+axR.spines['right'].set_bounds(1e-4, 1e-3)
+# Set color to grey
+axR.spines['right'].set_color('0.5')
+axR.tick_params(axis='both', colors='0.5', which='minor')
+axR.tick_params(axis='both', colors='0.5', which='major')
+# Set tick locations
+axR.set_yticks((1e-4, 1e-3))
+axR.set_yticklabels((r'$10^{-4}$', r'$10^{-3}$',) )
+axR.set_yticks(arange(2, 10) * 1e-4, minor=True)
+# Switch back to main axes
+plt.sca(ax)
+
+## Theoretical prediction by combining two approximations
+# Equilibrim Fst approximation
+m_arr = np.logspace(-8.5, 0, 5e2)
+Feq_arr = 1 / (1 + N * m_arr / alpha)
+p1_arr = np.array([pred.p1_wm_exact(alpha*(1-F), mu1, delta*(1-F), s*(1-F),
+    p2=s/alpha) for F in Feq_arr])
+# Deme birth-death approximation
+p1_dbd_arr = np.array([pred.p1_sub_deme_bd(N, alpha, mu1, delta, s, m) 
+    for m in m_arr])
+# Calculate the weights of each approximation to be high in the appropriate
+# migration range
+m_star = N * mu1 * s / alpha
+m_dagger = alpha / N
+weight_feq = m_arr / m_star
+weight_dbd = m_dagger / m_arr
+p1_avg_arr = (p1_arr * weight_feq + p1_dbd_arr * weight_dbd) / (weight_feq +
+        weight_dbd)
+# Plot the weighted average
+plot(m_arr, p1_avg_arr, 'k-', color=color_pred, label=r'prediction')
+
+## Simulation results
+# Estimated p1
+p1_est = df['num_success'] / df['num_runs']
+# Estimated standard error of the estimated p1
+p1_se = np.sqrt(p1_est / df['num_runs'])
+# This is small enough that we shouldn't need to plot it. Always double check
+# this on the final figure.
+# ax.errorbar(df['m'], p1_est, yerr=1.96*p1_se, fmt='ko', 
+#         label=r'$p_1$', clip_on=False)
+plot(df['m'], p1_est, 'ko', clip_on=False, label=r'simulations')
+
+## Text
+# Add regime labels
+# Unstructured, deleterious
+# center = sqrt(alpha/N)
+# p1_center = p1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_unstructured = text(center, p1_center * 2, 
+#         r'{\centering unstructured\\neutral\\}', color='0',
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Subdivided, neutral
+# center = sqrt(alpha/N * N*mu1*s/alpha)
+# p1_center = p1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_subdivided = text(center, p1_center * 10**0.4,
+#         r'{\centering subdivided\\neutral\\}', color='0',
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Isolated demes
+# center = sqrt(1e-8 * N*mu1*s/alpha)
+# p1_center = p1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_isolated = text(center, p1_center / 10**0.5,
+#         r'{\centering isolated demes\\neutral\\}', color='0',
+#         horizontalalignment='center', verticalalignment='top')
+
+## Color the regions corresponding to the different regimes
+# isolated demes
+axvspan(0, N*mu1*s/alpha, 
+        facecolor='#fee6ce', linewidth=0)
+# subdivided, neutral
+axvspan(N*mu1*s/alpha, alpha/N, 
+        facecolor='#deebf7', linewidth=0)
+# unstructured, neutral
+axvspan(alpha/N, 3, 
+        facecolor='#e5f5e0', linewidth=0)
+
+## Save figure
+
+# Set custom bounding box to ensure p1 and t1 figures have the same dimensions
+from matplotlib.transforms import Bbox
+mybbox = Bbox(np.array([[1.1, 0.66], [4.5, 3.00]]))
+
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size, forward=True)
+
+# Save with the custom bbox
+fig.savefig('/tmp/p1_neutral.pdf', bbox_inches=mybbox)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/p1_neutral.pdf', bbox_inches=mybbox)
+
+
+# Notes
+# Roughly, the ylab is 0.025 log units, relative to the y-axies length, above
+# the top of the y-axies. That is, the y-axis spans 5 orders of magnitude, or 5
+# log units, and the ylab is approximately 0.125 = 0.025*5 log units above the
+# top of the y-axis (log10(4e-2) - log10(3e-2) \approx 0.125).

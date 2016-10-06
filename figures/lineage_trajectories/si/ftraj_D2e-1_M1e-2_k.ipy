@@ -1,0 +1,150 @@
+"""Part of lineage trajectory for M=1e-2.
+
+Figure for the Feq SI. Goal is to demonstrate the timescale over which
+fluctuations in 1-F average out. Shows a zoomed in portion of the trajectory
+for M=1e-2 shown in the main text.
+
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from scipy import stats
+
+from pylab import *
+
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/analysis/']
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/simulations/lineage_tracer/']
+import predictions as pred
+from analysis import read_tracer_outfile
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+# Green '#006d2c' is darker, '#31a354' is lighter
+color_green = '#006d2c' # '#31a354'
+# Blue '#08519c' is darker, '#3182bd' is lighter
+color_blue = '#3182bd'
+
+##### Set parameters and load the data
+# Parameters
+L=1e2; N = 1e2; delta = 1e-3; m = 5e-5; alpha = 0.5
+Ntot = N * L
+# tmax = int(1e5)
+M = N * m / alpha
+# Read in data
+%cd ~/Dropbox/research/valley_crossing/metapopulations/asexual/src/simulations
+%cd lineage_tracer/output/
+df = read_tracer_outfile('island_L1e2_N1e2_s-1e-3_m5e-5_k/traj_L1e2_N1e2_s-1e-3_m5e-5_k500_5')
+df[-1]['f2']=0
+t_arr = df['t']
+n_arr = df['n']
+f_arr = df['f2']
+
+#### Make the plot
+fig, (ax_n, ax_f) = plt.subplots(2, sharex=True)
+fig.subplots_adjust(hspace=0.35)
+for ax in (ax_n, ax_f):
+    ## Spines
+    # Hide the right and top spines
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_position(('outward', 10))
+    ax.spines['bottom'].set_position(('outward', 10))
+    ## Tick lines
+    # Only show ticks on the left and bottom spines
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ## X axis
+    ax.set_xlabel(r"Time, $t$", labelpad=-4)
+    ax.set_xscale("linear")
+    ax.set_xlim(1.8e4, 3e4)
+    # Set tickmarks
+    ax.set_xticks((1.8e4, 3e4))
+    ax.set_xticklabels((r'$1.8\!\times\! 10^4$', r'$3\!\times\! 10^4$'))
+
+## Y axis
+ax_n.set_yscale("linear")
+ax_n.set_ylim(0, 400)
+ax_n.set_yticks((0, 100, 200, 300, 400))
+# ax_n.set_yticklabels((r'$0$', r'$N$', r'$2N$', r'$3N$', r'$4N$'))
+ax_n.set_yticklabels((r'$0$', r'', r'$2N$', r'', r'$4N$'))
+# 1-F
+ax_f.set_yscale("linear")
+ax_f.set_ylim(0.9, 1)
+ax_f.set_yticks((0.9, 1/(1+M), 1))
+ax_f.set_yticklabels((r'$0.9$', r'$\hat F$', r'$1$'))
+
+# Y label horizontal and above axis
+x = xlim()
+xloc = x[0] - (x[1] - x[0]) * 0.16
+ylab_n = ax_n.text(xloc, 1.08*400,
+    r'\noindent Number of mutants, $n(t)$', 
+    horizontalalignment='left', verticalalignment='bottom')
+ylab_f = ax_f.text(xloc, 0.9 + 1.08*0.1,
+    r'\noindent Assortment, $F(t)$', 
+    horizontalalignment='left', verticalalignment='bottom')
+
+#### Plot 
+## n trajectory
+ax_n.plot(t_arr, n_arr, color='k', linewidth=0.6, clip_on=True)
+# Line at N*Feq
+ax_n.axhline(N/(1+M), color='k', linestyle=':')
+## F trajectory
+# Entire trajectory
+ax_f.plot(t_arr, f_arr, color='0.6', label='Observed', linewidth=0.4, clip_on=True)
+# Rolling mean
+# Averaging over 1/(alpha/N+m) generations has minor effect
+ax_f.plot(t_arr, pd.rolling_mean(f_arr, int(1/(alpha/N+m)), center=True),
+        'k-', lw=0.7, color=color_blue)
+#
+# ax_f.plot(t_arr, pd.rolling_mean(f_arr, int((N/alpha+1/m)/sqrt(10)), center=True),
+#         'k-', lw=0.7, color=color_green)
+#
+# Averaging over N/alpha + 1/m generations has a large effect
+ax_f.plot(t_arr, pd.rolling_mean(f_arr, int(N/alpha+1/m), center=True), 'k-', lw=1)
+# Prediction
+ax_f.axhline(1/(1+M), color=color_pred, linestyle='--', label=r"Predicted")
+
+#### Save the figure
+# fig.set_size_inches((5.5, 6), forward=True)
+# fig.savefig('/tmp/f_traj_M1e-2_si.pdf',
+#         bbox_inches='tight', pad_inches=0.02)
+
+from matplotlib.transforms import Bbox
+
+fig.subplots_adjust(hspace=0.5)
+fig.set_size_inches((3.2, 4), forward=True)
+mybbox = Bbox(np.array([[-0.01,0], [3.1, 3.85]]))
+fig.savefig('/tmp/traj_D2e-1_M1e-2_si.pdf', bbox_inches=mybbox)
+
+# Split into two pdf files
+import copy
+from PyPDF2 import PdfFileWriter, PdfFileReader
+
+pdf_input = PdfFileReader('/tmp/traj_D2e-1_M1e-2_si.pdf')
+pdf_output_n = PdfFileWriter()
+pdf_output_f = PdfFileWriter()
+page = pdf_input.getPage(0)
+page_copy = copy.copy(page)
+(w, h) = page.mediaBox.upperRight
+page.mediaBox.lowerRight = (w, h/2)
+page_copy.mediaBox.upperRight = (w, h/2)
+pdf_output_n.addPage(page)
+pdf_output_f.addPage(page_copy)
+
+out_dir = '/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/'
+f = open(out_dir + 'n_traj_D2e-1_M1e-2_si.pdf', 'wb')
+pdf_output_n.write(f)
+f.close()
+f = open(out_dir + 'f_traj_D2e-1_M1e-2_si.pdf', 'wb')
+pdf_output_f.write(f)
+f.close()
+

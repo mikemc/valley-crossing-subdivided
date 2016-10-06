@@ -1,0 +1,183 @@
+"""Figure of $\E[\T_1]$ for D=2e-1 showing main results.
+
+Modified from the previous version that showed predictions for the Feq
+approximation and the DBD approximation separately. This version shows a
+simpler prediction by merging the two into one prediction and makes other
+changes to emphasize the main results.
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/analysis/']
+import predictions as pred
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# Color for main prediction line
+# Original color was '#FF9900'; color on SMBE poster is '#e6550d' 
+color_pred = '#e6550d'
+
+##### Set parameters and load the data
+# Parameters
+L = 100; N = 1e2; Ntot = L * N;
+alpha = 0.5; Ne = N / (2 * alpha)
+mu1 = 1e-8; delta = 1e-3; s = 5e-2;
+# Read in data
+% cd /home/michael/Dropbox/research/valley_crossing/metapopulations/asexual/
+% cd src/simulations/successful_single_mutants/
+% cd output/island_L1e2_N1e2_mu1e-8_d1e-3_s5e-2
+df = np.load('summary_data.npy')
+# The 2-mutant never fixes by tfinal in the runs with m=1e-9. However, we will
+# count the still segregating runs as successes in this case.
+df[0]['num_success'] = df[0]['num_seg']
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((3, 1.75))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-10, 1)
+# Major tick marks at special locations
+ax.set_xticks((N*mu1*s/alpha, (alpha/N) * mu1*s/delta**2, alpha/N,))
+ax.set_xticklabels((r'$\frac{N\mu_1 s}{\alpha}$', 
+    r'$\frac{\alpha\mu_1 s}{N\delta^2}$', 
+    r'$\frac{\alpha}{N}$',))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks((1e-9, 1e-8, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1), minor=True)
+ax.set_xticklabels((r'$10^{-9}$',) + ('',)*7 + (r'$1$',), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("log")
+ax.set_ylim(3e2, 3e7)
+# Major tick marks at special locations
+ax.set_yticks((1/delta, alpha/(N*mu1*s)))
+ax.set_yticklabels((r'$\frac{1}{\delta}$', 
+    r'$\frac{\alpha}{N \mu_1 s}$'))
+# Minor ticks to denote orders of magnitude
+ax.set_yticks((1e4, 1e5, 1e6), minor=True)
+# ax.set_yticklabels(('', r'$10^{5}$', ''), minor=True)
+ax.set_yticklabels((r'$10^{4}$', '', r'$10^{6}$' ), minor=True)
+# Y label horizontal and above axis
+ylab = text(1e-11, 4e7,
+    r"Average drift time, $\avg{\mathcal{T}_1}$",
+    horizontalalignment='left', verticalalignment='bottom')
+
+## Theoretical prediction by combining two approximations
+# Equilibrim Fst approximation
+m_arr = np.logspace(-9.5, 0, 1e3)
+Feq_arr = 1 / (1 + N * m_arr / alpha)
+t1_arr = np.array([pred.drift_time_wm_exact(alpha*(1-F), mu1, delta*(1-F),
+    s*(1-F), p2=s/alpha) for F in Feq_arr])
+# Deme birth-death approximation
+t1_dbd_arr = np.array([pred.drift_time_sub_deme_bd(N, alpha, mu1, delta, s, m)
+    for m in m_arr])
+# Calculate the weights of each approximation to be high in the appropriate
+# migration range
+m_star = N * mu1 * s / alpha
+m_dagger = alpha / N
+weight_feq = m_arr / m_star
+weight_dbd = m_dagger / m_arr
+t1_avg_arr = (t1_arr * weight_feq + t1_dbd_arr * weight_dbd) / (weight_feq +
+        weight_dbd)
+# Plot the weighted average
+plot(m_arr, t1_avg_arr, 'k-', color=color_pred, label=r'prediction')
+
+## Simulation results
+# Estimated drift time
+t1_est = df['t1']
+# Estimated standard error of the estimated t1
+t1_se = df['t1_se']
+# This is small enough that we shouldn't need to plot it. Always double check
+# this on the final figure.
+# errorbar(df['m'], t1_est, yerr=1.96*t1_se, fmt='g^', 
+#         label=r'$\mathcal T_1$')
+plot(df['m'], t1_est, 'ko', clip_on=False, label=r'simulation')
+
+# ## Text
+# # Add regime labels
+# # Unstructured, deleterious
+# center = sqrt(alpha/N)
+# t1_center = t1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_unstructured = text(center, t1_center * 10**1.5, 
+#         r'{\centering unstructured\\deleterious\\}', color='0',
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Subdivided, deleterious
+# center = sqrt(alpha/N * alpha*mu1*s/(N*delta**2))
+# t1_center = t1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_subdivided = text(center, t1_center * 10**1.5,
+#         r'{\centering subdivided\\deleterious\\}', color='0',
+#         horizontalalignment='center', verticalalignment='bottom')
+# # Subdivided, neutral
+# center = sqrt(alpha*mu1*s/(N*delta**2) * N*mu1*s/alpha)
+# t1_center = t1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_neutral = text(center, t1_center / 10**2,
+#         r'{\centering subdivided\\neutral\\}', color='0',
+#         horizontalalignment='center', verticalalignment='top')
+# # Isolated demes
+# center = sqrt(1e-10 * N*mu1*s/alpha)
+# t1_center = t1_avg_arr[(np.abs(m_arr - center)).argmin()]
+# text_isolated = text(center, t1_center / 10**1,
+#         r'{\centering isolated demes\\neutral\\}', color='0',
+#         horizontalalignment='center', verticalalignment='top')
+# Label prediction and simulations
+# Copy from p1 file if needed
+
+# Color the regions corresponding to the different regimes
+# isolated demes
+axvspan(0, N*mu1*s/alpha, 
+        facecolor='#fee6ce', linewidth=0)
+# subdivided, neutral
+axvspan(N*mu1*s/alpha, (alpha/N) * mu1*s/delta**2, 
+        facecolor='#deebf7', linewidth=0)
+# subdivided, deleterious
+axvspan((alpha/N) * mu1*s/delta**2, alpha/N, 
+        facecolor='#9ecae1', linewidth=0)
+# unstructured, deleterious
+axvspan(alpha/N, 1, 
+        facecolor='#a1d99b', linewidth=0)
+
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks().min(), ax.get_yticks().max())
+# ax.spines['bottom'].set_bounds(m_arr.min(), m_arr.max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+
+# Save figure
+# %cd ~/Dropbox/research/valley_crossing/metapopulations/asexual/tex/figures/
+# In Genetics Overleaf example file, width of a one-column figure is 3.461 in
+# and entire page width (text area) is 7.275 inches
+# However, in current genetics articles the text-page size is 7.022 in and one
+# column of text is 3.406 in. 
+# I will aim for 3.4 inches for a one-column figure.
+
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size, forward=True)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/t1_D2e-1.pdf', bbox_inches='tight', pad_inches=0.02)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/t1_D2e-1.pdf', bbox_inches='tight', pad_inches=0.02)
+

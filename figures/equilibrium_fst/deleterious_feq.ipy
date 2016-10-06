@@ -1,0 +1,156 @@
+"""Figure of the MSE F as function of m for various N*delta/alpha
+"""
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pylab import *
+
+sys.path += ['/home/michael/research/valley_crossing/metapopulations/asexual/'\
+        + 'src/analysis/']
+import predictions as pred
+
+# Configure matplotlib
+from matplotlib import rcParams
+%run ~/research/valley_crossing/metapopulations/asexual/src/figures/matplotlib_rcparams.py
+
+## Colors
+# color_wheel = [ '#d73027', '#f46d43', '#fdae61', '#abd9e9', '#74add1', '#4575b4', ][::-1]
+color_wheel = ['#fdae6b', '#fd8d3c', '#f16913', '#d94801', '#a63603', '#7f2704', ]
+
+##### Set parameters and load the data
+# Parameters
+N = 2e2; alpha = 0.5; Ne = N / (2 * alpha)
+
+#### Make the plot
+# Initially, make the figure twice as big as it needs to be to ensure enough
+# room, and then trim whitespace when saving
+axes_size = array((2.92, 1.7))
+fig = plt.figure()
+fig.set_size_inches(2 * axes_size)
+# Set axes rectagle (left, bottom, width, height) to occupy the center of the
+# figure. Numbers are fractions of the figure width/height.
+ax = fig.add_axes((0.25, 0.25, 0.5, 0.5))
+# Hide the right and top spines
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+## Tick lines
+# Only show ticks on the left and bottom spines
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+## X axis
+ax.set_xlabel(r"Migration rate, $m$", labelpad=3)
+ax.set_xscale("log")
+ax.set_xlim(1e-8, 1)
+# Major tick marks at special locations
+ax.set_xticks((alpha/N,))
+ax.set_xticklabels((r'$\frac{\alpha}{N}$',))
+# Minor ticks to denote orders of magnitude; avoid overlapping with major ticks
+ax.set_xticks((1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1),
+        minor=True)
+# ax.set_xticklabels((r'$10^{-8}$',) + ('',)*7 + (r'$1$',), minor=True)
+ax.set_xticklabels(( r'$10^{-8}$', '', r'$10^{-6}$', '', r'$10^{-4}$', '',
+    r'$10^{-2}$', '', r'$1$',), minor=True)
+ax.tick_params(axis='both', colors='0.5', which='minor')
+## Y axis
+ax.set_yscale("linear")
+ax.set_ylim(0, 1)
+# Major tick marks at special locations
+ax.set_yticks((0, 0.5, 1))
+ax.set_yticklabels((r'$0$', r'$0.5$', r'$1$'))
+# Minor ticks to denote orders of magnitude
+ax.set_yticks((), minor=True)
+# Y label horizontal and above axis
+ylab = text(1e-9, 1.06, 
+    r'\noindent Assortment at MSE, $\hat{F}_\delta$', 
+    horizontalalignment='left', verticalalignment='bottom')
+## Spines
+# Clip left and bottom axes to data range
+ax.spines['left'].set_bounds(ax.get_yticks().min(), ax.get_yticks().max())
+# ax.spines['bottom'].set_bounds(m_arr.min(), m_arr.max())
+ax.spines['bottom'].set_bounds(ax.get_xticks(minor=True).min(),
+        ax.get_xticks(minor=True).max())
+ax.spines['left'].set_position(('outward', 10))
+ax.spines['bottom'].set_position(('outward', 10))
+
+
+
+#### Plotting
+m_arr = np.logspace(-8, 0, 200)
+delta_arr = alpha/N * array([0, 0.5, 1, 2, 4, 8, 16])
+
+# Generate the equilibrium F data using the phi_stats function
+xtot = 1e-10
+f_arr = array([np.array([pred.phi_stats(xtot, N, alpha, m, delta)[3] for m in
+    m_arr]) for delta in delta_arr])
+
+# delta = alpha/N * 0.5
+# fd_arr = np.array([pred.phi_stats(xtot, N, alpha, m, delta)[3] for m in m_arr])
+# plot(m_arr, fd_arr, '-')
+
+# Plot neutral line
+plot(m_arr, f_arr[0], 'k:')
+
+# Plot points corresponding to m = delta / (exp(N*delta/alpha) - 1) to 
+# verify that F approx 0.5 
+# m50_arr = delta_arr / (exp(N*delta_arr/alpha) - 1)
+# m50_arr[0] = alpha/N
+# f50_arr = array([pred.phi_stats(xtot, N, alpha, m, delta)[3] for (m, delta) in zip(m50_arr, delta_arr)])
+# plot(m50_arr, f50_arr, 'ko')
+
+# Plot with custom colors
+for (fd_arr, color) in zip(f_arr[1:], color_wheel):
+    plot(m_arr, fd_arr, '-', color=color)
+
+text_neu = text(m_arr[-75], f_arr[0][-75], 
+        r'$\frac{N\delta}{\alpha}=0$', color='k',
+        horizontalalignment='left', verticalalignment='bottom')
+
+text_del = text(m_arr[10], f_arr[6][10],
+        r'$\frac{N\delta}{\alpha}=16$', color=color_wheel[6 - 1],
+        horizontalalignment='left', verticalalignment='bottom')
+
+#### Save the figure
+# If a cla() has been called, it is necessary to first call this again:
+fig.set_size_inches(2 * axes_size)
+
+# This will trim whitespace while keeping axes at size axes_size
+fig.savefig('/tmp/f_at_mse.pdf', bbox_inches='tight', pad_inches=0.02)
+
+# This will replace the manuscript's figure
+fig.savefig('/home/michael/research/valley_crossing/metapopulations/asexual/tex/figures/f_at_mse.pdf', bbox_inches='tight', pad_inches=0.02)
+
+
+################ Notes
+
+# m_arr = np.logspace(-8, 0, 200)
+# xtot = 1e-10
+# f_arr = np.array([pred.phi_stats(xtot, N, alpha, m, delta)[3] for m in m_arr])
+# 
+# fa_arr = 1 / (N * (m_arr + delta) / alpha)
+# 
+# 
+# weight_a = 1 / ((1 - fa_arr) * delta)
+# weight_b = 1 / (m_arr * (exp(N*delta/alpha) - 1))
+# weight_tot = weight_a + weight_b
+# 
+# fab_arr = (weight_a * fa_arr + weight_b) / weight_tot
+# 
+# 
+# xscale('log')
+# plot(m_arr, f_arr)
+# plot(m_arr, fa_arr)
+# plot(m_arr, fab_arr)
+# 
+# # Distribution of local frequencies without fixation
+# 
+# phi = lambda y: exp(-N*delta/alpha*y) * y**(N*m*x/alpha-1) * (1-y)**(N*m*(1-x)/alpha-1)
+# # Subtract off the contribution of type Bs
+# phi_A = lambda y: phi(y) - exp(-N*delta/alpha)*(1-y)**(N*m*(1-x)/alpha -1)
+# 
+# x=1e-4; m=1e-6
+# y_arr = arange(0, 1, 1e-4)
+# plot(y_arr, phi(y_arr))
+# plot(y_arr, phi_A(y_arr))
+# yscale('log')
+# 
